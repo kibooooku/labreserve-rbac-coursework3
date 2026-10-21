@@ -1,0 +1,118 @@
+{
+  "passed": true,
+  "steps": [
+    {
+      "name": "student通过页面真实登录",
+      "passed": true
+    },
+    {
+      "name": "学生隐藏权限管理及审计菜单",
+      "passed": true
+    },
+    {
+      "name": "学生监听器提交预约并持久化为待审批",
+      "passed": true
+    },
+    {
+      "name": "teacher通过页面真实登录",
+      "passed": true
+    },
+    {
+      "name": "教师在共享预约页面批准他人申请",
+      "passed": true
+    },
+    {
+      "name": "keeper通过页面真实登录",
+      "passed": true
+    },
+    {
+      "name": "设备管理员从已批准预约办理实物领用",
+      "passed": true
+    },
+    {
+      "name": "设备管理员办理归还，借用和预约状态同步",
+      "passed": true
+    },
+    {
+      "name": "admin通过页面真实登录",
+      "passed": true
+    },
+    {
+      "name": "管理员查看页面菜单业务三类对象权限矩阵",
+      "passed": true
+    },
+    {
+      "name": "管理员通过矩阵撤销教师批准许可",
+      "passed": true
+    },
+    {
+      "name": "教师旧会话直调审批接口被403拒绝，伪造对象操作无效",
+      "passed": true
+    },
+    {
+      "name": "管理员通过矩阵恢复教师许可",
+      "passed": true
+    },
+    {
+      "name": "管理员通过真实表单保存用户学生与教师双角色",
+      "passed": true
+    },
+    {
+      "name": "multi通过页面真实登录",
+      "passed": true
+    },
+    {
+      "name": "多角色账号有批准许可，仍被业务规则禁止自审",
+      "passed": true
+    },
+    {
+      "name": "auditor通过页面真实登录",
+      "passed": true
+    },
+    {
+      "name": "审计员查看九个固定事件绑定及允许拒绝记录",
+      "passed": true
+    },
+    {
+      "name": "审计员可读矩阵但无法修改授权",
+      "passed": true
+    },
+    {
+      "name": "管理员通过按钮下载带BOM的真实CSV",
+      "passed": true
+    },
+    {
+      "name": "学生通过确认对话框取消本人待审预约",
+      "passed": true
+    },
+    {
+      "name": "390像素窄屏导航和预约表单可操作且无整页水平溢出",
+      "passed": true
+    },
+    {
+      "name": "退出后会话失效，接口拒绝继续访问",
+      "passed": true
+    },
+    {
+      "name": "全部浏览器上下文无JavaScript运行异常",
+      "passed": true
+    }
+  ],
+  "console_errors": [],
+  "unexpected_http_errors": [],
+  "screenshots": [
+    "evidence\\browser\\01-student-dashboard.png",
+    "evidence\\browser\\02-student-reservation.png",
+    "evidence\\browser\\03-teacher-approval.png",
+    "evidence\\browser\\04-loan-return.png",
+    "evidence\\browser\\05-permission-matrix.png",
+    "evidence\\browser\\06-multi-role-assignment.png",
+    "evidence\\browser\\07-self-review-denied.png",
+    "evidence\\browser\\08-event-audit.png",
+    "evidence\\browser\\09-mobile-reservation.png"
+  ],
+  "browser": "Microsoft Edge headless via Playwright",
+  "started_at": "2026-10-21T16:53:24.829921+00:00",
+  "data_isolation": "fresh temporary SQLite database; positive changes through UI",
+  "finished_at": "2026-10-21T16:54:03.944766+00:00"
+}

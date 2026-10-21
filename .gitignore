@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest-*/
+evidence/test-tmp*/
+instance/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+.env
+*.log
+evidence/browser/profile/

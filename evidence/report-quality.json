@@ -1,0 +1,29 @@
+{
+  "structure": {
+    "passed": true,
+    "template_sha256": "392580b9647142b48bcef907a596bfc67ba4485e6642dad15d5326737ee10f18",
+    "final_sha256": "f6c84669397db9d58191bd7deab5c8cd10c0ea90a2b9449202a1e4b2e728609d",
+    "sections": 3,
+    "preserve_only_parts_unchanged": 23,
+    "added_images": 8,
+    "template_placeholders_remaining": false,
+    "toc_and_page_fields_present": true
+  },
+  "visual": {
+    "passed": true,
+    "page_count": 19,
+    "review": "All 19 page PNGs visually reviewed with tools; last reference pagination update rechecked on pages 2,18,19; all other PNG hashes unchanged",
+    "checks": [
+      "cover and source template retained",
+      "TOC cached page numbers match final Word heading map",
+      "figures and captions on same page",
+      "no clipping, missing glyphs or overflow",
+      "reference titles and their URLs kept together"
+    ],
+    "reviewed_changed_pages": [
+      2,
+      18,
+      19
+    ]
+  }
+}

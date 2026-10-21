@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#214c43">
+  <title>LabReserve · 实验室设备预约与借用</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23214c43'/%3E%3Cpath d='M16 8v12L9 31h22l-7-11V8M14 8h12M14 25h12' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <div id="login-view" class="login-shell" hidden>
+    <section class="login-story">
+      <a class="brand brand-light" href="/" aria-label="LabReserve 首页"><span class="brand-mark">L<span>R</span></span><span>LabReserve<small>实验室设备预约与借用</small></span></a>
+      <div class="story-content"><span class="eyebrow">CAMPUS LAB MANAGEMENT</span><h1>让实验准备<br>井然有序。</h1><p>从预约、审批到借用归还，<br>让每一件设备与每一次实验可靠衔接。</p><div class="story-flow"><span>01 预约申请</span><i>↗</i><span>02 教师审批</span><i>↗</i><span>03 借用归还</span></div></div>
+      <div class="story-bottom"><span class="live-dot"></span> 基于 RBAC 的精细权限控制 <span>COURSEWORK · 03</span></div>
+    </section>
+    <section class="login-content">
+      <div class="login-card"><span class="eyebrow">欢迎使用 LABRESERVE</span><h2>登录工作台</h2><p class="muted">使用演示账号体验完整的设备管理流程。</p>
+        <form id="login-form"><label for="username">用户名</label><input id="username" name="username" autocomplete="username" required placeholder="请输入用户名" value="student"><label for="password">密码</label><input id="password" name="password" type="password" autocomplete="current-password" required value="Lab@2026!"><p id="login-error" class="form-error" role="alert"></p><button type="submit" class="button primary login-button">登录工作台 <span>→</span></button></form>
+        <div class="demo-accounts"><div class="section-mini-title">快速选择演示身份 <span>共用密码 Lab@2026!</span></div><div class="account-grid"><button type="button" data-demo="student"><b>学生</b><small>申请与查看预约</small></button><button type="button" data-demo="teacher"><b>指导教师</b><small>审批预约申请</small></button><button type="button" data-demo="keeper"><b>设备管理员</b><small>设备与借还管理</small></button><button type="button" data-demo="admin"><b>系统管理员</b><small>完整权限配置</small></button><button type="button" data-demo="auditor"><b>审计员</b><small>只读审计与追踪</small></button><button type="button" data-demo="multi"><b>学生 + 教师</b><small>多角色权限合并</small></button></div></div>
+        <p class="login-note">本地课程演示系统 · 权限由服务端在每次操作时校验</p>
+      </div>
+    </section>
+  </div>
+  <div id="app-view" class="app-shell" hidden>
+    <aside class="sidebar" id="sidebar"><a href="#dashboard" class="brand"><span class="brand-mark">L<span>R</span></span><span>LabReserve<small>实验室设备预约与借用</small></span></a><div class="workspace-tag"><span class="live-dot"></span> 教学实验中心 <span>WORKSPACE</span></div><div class="nav-caption">工作空间</div><nav id="main-nav" aria-label="主导航"></nav><div class="sidebar-bottom"><div class="shield-icon">◇</div><b>每个操作，都有边界</b><p>角色权限 × 控制对象<br>由事件监听器触发授权检查</p><span class="version-tag">SYSTEM ANALYSIS · HW 03</span></div></aside>
+    <div class="app-body"><header class="topbar"><div class="topbar-left"><button id="menu-toggle" class="icon-button mobile-only" aria-label="展开导航" aria-expanded="false">☰</button><span class="topbar-location">教学实验中心</span><span class="breadcrumb-divider">/</span><span id="current-page-name">工作台概览</span></div><div class="topbar-right"><span class="environment-badge"><span class="live-dot"></span>本地演示</span><div class="user-chip"><span id="user-avatar" class="avatar"></span><span><strong id="user-name"></strong><small id="user-roles"></small></span></div><button id="logout-button" class="icon-button" aria-label="退出登录" title="退出登录">↪</button></div></header><main id="main-content" tabindex="-1" aria-live="polite"></main><footer class="app-footer"><span>LabReserve · 实验室设备预约与借用系统</span><span>事件驱动 · RBAC · SQLite 持久化</span></footer></div>
+  </div>
+  <dialog id="action-dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog>
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <noscript><p class="noscript-warning">请启用 JavaScript 以使用实验室设备预约系统。</p></noscript>
+</body>
+</html>

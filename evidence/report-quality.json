@@ -2,28 +2,66 @@
   "structure": {
     "passed": true,
     "template_sha256": "392580b9647142b48bcef907a596bfc67ba4485e6642dad15d5326737ee10f18",
-    "final_sha256": "f6c84669397db9d58191bd7deab5c8cd10c0ea90a2b9449202a1e4b2e728609d",
+    "final_sha256": "35e4809b635185f57ac0a11358502b13ab2973516075c478e75ae7bfa346bfb5",
     "sections": 3,
     "preserve_only_parts_unchanged": 23,
-    "added_images": 8,
+    "added_images": 15,
     "template_placeholders_remaining": false,
     "toc_and_page_fields_present": true
   },
   "visual": {
     "passed": true,
-    "page_count": 19,
-    "review": "All 19 page PNGs visually reviewed with tools; last reference pagination update rechecked on pages 2,18,19; all other PNG hashes unchanged",
-    "checks": [
-      "cover and source template retained",
-      "TOC cached page numbers match final Word heading map",
-      "figures and captions on same page",
-      "no clipping, missing glyphs or overflow",
-      "reference titles and their URLs kept together"
+    "report_sha256": "35e4809b635185f57ac0a11358502b13ab2973516075c478e75ae7bfa346bfb5",
+    "page_count": 28,
+    "final_toc_visually_reviewed": true,
+    "rbac_chapter_pages": 7,
+    "rbac_chapter_full_pages": 5,
+    "rbac_physical_pages": [
+      21,
+      27
     ],
-    "reviewed_changed_pages": [
-      2,
-      18,
-      19
-    ]
+    "review": "Every page directly inspected or byte-identical to a reviewed PNG; final cached TOC checked separately.",
+    "final_render_changed_pages": [
+      2
+    ],
+    "checks": [
+      "template and section fidelity",
+      "all business fields match schema",
+      "actual Word headings and cached TOC agree",
+      "real screenshots with matching captions",
+      "matrix panels kept together",
+      "no clipping or missing symbols",
+      "at least three full RBAC analysis pages"
+    ],
+    "page_sha256": {
+      "page-1.png": "50d6f81dec8e1ae6234691adfba65016a8315a1f67cad1355083274de3cabc8b",
+      "page-2.png": "e6f01d1bad1d71567441afe32c831e91d5cde4eab8dca3e54d7b3a3acef7c4c1",
+      "page-3.png": "88f862ba841338619a546cf7d35d954e1b03880d83eaa64a479080d93df037b6",
+      "page-4.png": "df8e50e68d2cca30585c43ee6d277429dd20e9cb2c701d5cd64e8574741fa379",
+      "page-5.png": "3301becc2c2f4adf0558a61eee46b2bd089b1449b41fd1d011cd3695388caa2d",
+      "page-6.png": "6b51fb402587b6ccbdccc29e9fbcd9f50ada98a67b2e2665aa712ed7ffc2ebd1",
+      "page-7.png": "b06791cf50b8e0aef74a7f7e59e3df674c0053f21c53d200649b71468a4d5686",
+      "page-8.png": "9db72a648e59c2fa355e52db9ac4d42e1ef9e43302ad26ce03578e4207404fda",
+      "page-9.png": "780c93464b0d0743c8c70ec149dc1e474e897d5a9730c129b57fe62ba80379a7",
+      "page-10.png": "55fad80643239fd24e4c439d8ddd0fe989e98d755710312f792cd3d879951b49",
+      "page-11.png": "c352da6a80097c2a28f9935152f77020f63e50ae83e585001ccb067e6a0db4dd",
+      "page-12.png": "b995f66eb8486f82fe970d519acc4c803704c2655843c92e7c2e051cf42e09ce",
+      "page-13.png": "c73ef8a7e275133a43794793d9f134eb88a3df58b74842a0a633dcafbdeaeb51",
+      "page-14.png": "15fde662cdaf00b8a5d47ae125974a6fa7f6d363fda5379ad64a7932f2134042",
+      "page-15.png": "a24d80847322801455d18bfa5e2ebd4b0ec5e982cd23f24d66a79ff876b17c0b",
+      "page-16.png": "10ef3eab39121ae98696dce0edf569485221a8e11b0503dad7ffb1b35c9509bb",
+      "page-17.png": "fe900bb1ca0b6c2f0a6d5a417b41f5e34e3179e7fa73ccd6963e0140fe2bfe46",
+      "page-18.png": "3820c9349e70ffa8e7328e0055e6ecdad1e2aec65bf610b40db633ac0b564c7f",
+      "page-19.png": "a53f0790fbaf51b48d29592847bb00101e2c5b879c103e1b1e5a9b4ca6fe3c0b",
+      "page-20.png": "20b82a55030764f2caf7e26e32b1308137b3d35bd80f2544f5f4e4ca1cdad4d4",
+      "page-21.png": "76524065f700dae9d9fd37fe6a108ae23f873ac8fad9eb85b1a2fc2215bb91e0",
+      "page-22.png": "5b7f6690313dae088f4c3ae2ba20acb1e28dbff413e0d1bf4a573d5ba244d3a0",
+      "page-23.png": "8c9f921d0d61c0c5591dcfa9ae1e615d4e83265c65db47aa1b31919d01f1f300",
+      "page-24.png": "86d9c28b45f920342d1b567bd49009fddbe99351e17980ab26c5c7d55f172281",
+      "page-25.png": "f55cf9820ad597a1959ccb8d344381606e8f1bd2162d277cd23cd1fd0dd951ae",
+      "page-26.png": "5a9f22b0d0a07492fb46ba94eb5ff192a3f5d3a67d70f3c850f92642609f82ef",
+      "page-27.png": "be683d874dd02096b530a8746b85b8ba0bbc7314cb52a3cd27fb9f64ddc617d2",
+      "page-28.png": "ca4258add449981bcd4d952f2862be3b8e52880feab64bdbf9fa9fd7bb870357"
+    }
   }
 }

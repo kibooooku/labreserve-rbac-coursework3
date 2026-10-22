@@ -1,3 +1,3 @@
-.                                                                        [100%]
-- generated xml file: C:\Users\yq\Desktop\ϵͳ���������ҵ\��ҵ3\labreserve\evidence\pytest-persistence.xml -
-1 passed in 9.04s
+持久化证据是同一次85项完整运行中的单项摘录，不是额外一次测试，不重复计数。
+用例：test_saved_permissions_survive_application_recreation_without_reseeding
+结果：通过；其原始时间戳与结果见完整pytest-results.xml。

@@ -1,3 +1,4 @@
-...................................................................      [100%]
-- generated xml file: C:\Users\yq\Desktop\系统分析设计作业\作业3\labreserve\evidence\pytest-results.xml -
-67 passed in 129.19s (0:02:09)
+本次后端完整验证的实际工具运行摘要：
+85 passed in 69.39s (0:01:09)
+运行命令：.venv/Scripts/python.exe -m pytest -q --basetemp .pytest-v2-tmp/final --junitxml .pytest-v2-tmp/pytest-results-final.xml
+本文件是工具输出摘要，不是重建的终端逐行记录；完整用例与结果以 pytest-results.xml（JUnit）为准。

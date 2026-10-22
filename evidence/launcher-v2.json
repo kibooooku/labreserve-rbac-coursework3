@@ -1,0 +1,104 @@
+{
+  "passed": true,
+  "verifier_python": "3.12.14",
+  "checks": [
+    {
+      "project": "source",
+      "date": "2026-10-22T09:30:36+08:00",
+      "python_version": "3.14.3",
+      "existing_environment_reused": true,
+      "launcher_encoding": "ASCII",
+      "launcher_line_endings": "CRLF",
+      "hidden_process": true,
+      "random_port": 14210,
+      "passed": true,
+      "database_before": {
+        "table_count": 16,
+        "user_version": 2,
+        "foreign_key_violations": 0,
+        "business_counts": {
+          "laboratories": 7,
+          "equipment_categories": 5,
+          "equipment": 8,
+          "reservations": 7,
+          "reservation_reviews": 4,
+          "loans": 2,
+          "equipment_maintenance": 1
+        }
+      },
+      "http_statuses": {
+        "/": 200,
+        "/api/login": 200,
+        "/api/equipment/metadata": 200,
+        "/api/maintenance": 200,
+        "/api/reservations": 200,
+        "/api/loans": 200
+      },
+      "database_after": {
+        "table_count": 16,
+        "user_version": 2,
+        "foreign_key_violations": 0,
+        "business_counts": {
+          "laboratories": 7,
+          "equipment_categories": 5,
+          "equipment": 8,
+          "reservations": 7,
+          "reservation_reviews": 4,
+          "loans": 2,
+          "equipment_maintenance": 1
+        }
+      },
+      "schema_migrated_on_launch": false,
+      "existing_business_data_preserved": true,
+      "dependency_install_skipped": true,
+      "seconds": 3.36
+    },
+    {
+      "project": "delivery",
+      "date": "2026-10-22T09:30:40+08:00",
+      "python_version": "3.14.3",
+      "existing_environment_reused": true,
+      "launcher_encoding": "ASCII",
+      "launcher_line_endings": "CRLF",
+      "hidden_process": true,
+      "random_port": 6774,
+      "passed": true,
+      "database_before": {
+        "table_count": 12,
+        "user_version": 0,
+        "foreign_key_violations": 0,
+        "business_counts": {
+          "equipment": 8,
+          "reservations": 7,
+          "loans": 2
+        }
+      },
+      "http_statuses": {
+        "/": 200,
+        "/api/login": 200,
+        "/api/equipment/metadata": 200,
+        "/api/maintenance": 200,
+        "/api/reservations": 200,
+        "/api/loans": 200
+      },
+      "database_after": {
+        "table_count": 16,
+        "user_version": 2,
+        "foreign_key_violations": 0,
+        "business_counts": {
+          "laboratories": 7,
+          "equipment_categories": 5,
+          "equipment": 8,
+          "reservations": 7,
+          "reservation_reviews": 4,
+          "loans": 2,
+          "equipment_maintenance": 1
+        }
+      },
+      "schema_migrated_on_launch": true,
+      "existing_business_data_preserved": true,
+      "dependency_install_skipped": true,
+      "seconds": 3.78
+    }
+  ]
+}

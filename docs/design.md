@@ -1,63 +1,50 @@
-# LabReserve 实验室设备预约与借还系统设计说明
+# LabReserve 系统设计
 
-本文是作业 3 的设计说明，依据本目录 `api-contract.md`、`作业3/作业要求.jpg`、`作业3/参考笔记.md` 及其课堂图片编写。文中的图和表描述设计关系；功能完成情况应以实际源代码、测试日志、运行截图及验收记录为准。
+LabReserve 管理实验室设备的预约、审批、实物借还、验收和维护，并用数据库中的角色许可控制共享页面和业务动作。本文对应数据库版本 2：16 张表、15 项固定事件绑定。字段和约束的完整清单见 [database-schema.md](database-schema.md)，请求与响应见 [api-contract.md](api-contract.md)。
 
-## 1. 任务范围与四项作业要求
+## 1. 业务范围与分层
 
-应用围绕一条可演示业务链展开：学生查询设备并申请预约，教师审批，设备管理员办理借出与归还，系统管理员维护角色与权限，审计员查看事件记录。教师、管理员也可以提出自己的预约申请。示例设备每条记录代表一台实物，不以数量字段模拟多台设备。
+一条主要链路是申请人选择设备并预约，教师批准或驳回，设备管理员登记借出与归还，异常验收转入维护，维护完成后恢复可用条件。实验室和分类是独立主数据，设备每一行代表一台实物；同型号可以有多台实物，code 为各台独立资产编号。
 
-| 作业原要求 | 本项目中的设计落点 | 应提交的对应材料 |
+| 层次 | 实际职责 | 边界 |
 | --- | --- | --- |
-| 完整的代码实现 | Flask 服务、SQLite 数据库、原生 HTML/CSS/JavaScript 界面、初始化和启动入口、自动化验证 | 可运行源代码、依赖清单、启动说明、测试记录 |
-| 页面操作显示、相应角色与权限控制 | 共享页面、角色账号、页面/菜单/按钮三层权限、接口二次校验、角色权限矩阵、多角色账号 | 运行截图、矩阵和授权变更记录、允许与拒绝案例 |
-| 分析 RBAC 机制及页面、菜单、按钮控制异同 | 对象与操作分离；监听器产生消息；固定事件表解析后统一鉴权；业务状态规则单独实现 | 本文第 3—7 节、ER 图、事件时序图 |
-| 所有权限保存在数据库表中 | 七张 RBAC 核心表；角色关联和许可关联采用复合主键、外键及唯一约束 | 数据库模式、初始化数据、表结构检查和权限持久化验证 |
+| 共享界面 | 根据页面、菜单及业务许可呈现功能，监听点击与提交，显示审批、借还和维护记录 | 不决定最终授权，不接收客户端自报的角色特权 |
+| HTTP/会话 | 统一 JSON、Cookie 身份、CSRF、同源检查和安全响应头 | 会话只确定身份，没有自选激活角色状态 |
+| 固定事件入口 | source_id 解析为 event_type、object_code、operation_code、handler；统一鉴权与审计 | 客户端不能通过 payload 替换绑定或指定任意函数 |
+| RBAC 服务 | 从 user_roles、role_permissions 实时求全部已分配角色的许可并集 | 不理解时段、维护、归属或审批记录的业务含义 |
+| 业务服务 | 校验主数据、记录归属、状态、时段、实物占用、审批和维护规则 | 通过统一授权后才执行；业务限制不会自动成为新角色 |
+| SQLite | 外键、复合主键、唯一键、检查约束、事务和部分唯一索引 | 本地单数据库写入序列化，不是分布式库存锁 |
 
-图片中“RBAC 是一个模型簇，可展开对比分析”作为讨论性扩展：本项目实现平面角色模型及多角色权限并集；角色继承、静态/动态职责分离与更复杂约束模型不写成已经完成的功能。
+实验室 manager_id 仅表示业务负责人，不会自动赋予管理员角色，也不会形成按实验室隔离的数据授权。设备分类与实验室可独立停用；有有效预约或未归还借用时拒绝停用相关主数据，保留历史关联。
 
-## 2. 总体结构与职责
+## 2. 16 表关系
 
-系统使用浏览器、Flask、SQLite 的三层结构，本地入口为 `http://127.0.0.1:8783`。界面使用原生事件监听器，不依赖外部 CDN。服务端返回统一 JSON：成功为 `{ok:true,data:...}`，失败为 `{ok:false,error:{code,message}}`。
-
-| 层次 | 职责 | 与相邻层的边界 |
+| 分组 | 表 | 关系与键 |
 | --- | --- | --- |
-| 共享界面 | 呈现设备、预约、借还、权限矩阵、事件审计；按权限显示导航与按钮；采集输入 | 不决定最终授权，也不信任浏览器传来的角色或操作名称 |
-| 事件入口 | 校验登录和 CSRF；根据固定 source_id 解析对象、操作和处理器；审计事件 | 不允许客户端直接选择处理器或替换受控对象 |
-| RBAC 服务 | 从数据库计算用户所有角色拥有的许可并集，判断某对象上的某操作 | 不判断预约冲突、自审、设备状态或归还状态 |
-| 业务服务 | 校验字段、数据归属、时间区间、状态转换与设备实物约束 | 所需权限由调用方声明并统一校验，不复制另一套角色常量判断 |
-| 持久层 | 外键约束、事务、冲突检测、业务记录与审计落库 | 不以界面是否隐藏按钮作为数据完整性保证 |
+| 授权 | users | 用户身份，username 唯一，密码仅保存散列 |
+| 授权 | roles | 角色，code 唯一 |
+| 授权 | user_roles | PK(user_id,role_id)，两个外键；用户与角色多对多 |
+| 授权 | operations | 操作词汇，code 唯一 |
+| 授权 | control_objects | 受控对象，code 唯一，kind 为 page/menu/business |
+| 授权 | permissions | PK(operation_id,object_id)，限定支持的操作与对象组合 |
+| 授权 | role_permissions | PK(role_id,operation_id,object_id)，后两列复合外键引用 permissions |
+| 技术 | sessions | token_hash 主键，user_id 外键，CSRF 与到期时间；不保存原始会话令牌 |
+| 技术 | event_audit | actor_id 外键，保存事件绑定、目标、结果和时间 |
+| 业务 | laboratories | 实验室 code 唯一，manager_id 可空并引用 users，active 表示启停 |
+| 业务 | equipment_categories | 分类 code/name 分别唯一，active 表示启停 |
+| 业务 | equipment | 资产 code 唯一；model、分类/实验室外键、架位、生命周期、创建人及创建/更新时间 |
+| 业务 | reservations | 设备、申请人、时段、用途、流程状态、创建/更新时间、取消人和取消时间 |
+| 业务 | reservation_reviews | reservation_id 唯一外键；审批人、决定、意见与时间；每份申请一次最终决定 |
+| 业务 | loans | reservation_id 唯一外键；借出/归还经办人、独立检查说明、时间和验收结果 |
+| 业务 | equipment_maintenance | 设备外键、可空且唯一的 loan_id、开始/结束经办人与时间、原因和结果；每台设备最多一条开放维护 |
 
-共享界面避免给学生、教师、管理员复制数套相同页面。权限变化后重新取得用户权限并更新呈现；每次服务端操作仍重新判定当前权限，防止旧页面继续提交过期权限。
+许可不使用独立 permission_id。操作与对象组合本身唯一标识一项许可，角色许可表直接引用这一组合，避免许可重复和不存在的许可关联。user_roles 的联合主键表示一个用户不会重复获得同一角色；role_permissions 的三列主键表示同一角色不会重复获得同一许可。
 
-## 3. 按课堂笔记建立七表模型
+预约与审批记录拆分，使审批意见不会混入申请字段；取消已批准但尚未借出的预约时保留原审批记录。借还记录分别保存 checkout_condition 和 return_condition，后者不会覆盖前者。验收异常关联维护记录，能够从一次归还追溯该实物的维护原因；普通手动维护的 loan_id 为空。
 
-### 3.1 关系及键的含义
+## 3. 授权与会话
 
-课堂笔记将“操作”和“控制对象”拆为独立实体，把许可表示为二者的有效组合。本项目不引入独立的 permission_id 代理键。下面列的是逻辑模式；其他登录或显示字段由实际数据库模式补充。
-
-| 表 | 关键字段与约束 | 关系含义 |
-| --- | --- | --- |
-| users | id 主键；username 唯一；密码仅存散列 | 用户身份；与业务申请人关联，但不直接保存唯一 role_id |
-| roles | id 主键；code 唯一；name | 角色是许可集合的命名单位 |
-| user_roles | PRIMARY KEY(user_id,role_id)；两字段均为外键 | 用户与角色的多对多分配；禁止重复分配 |
-| operations | id 主键；code 唯一；name | view、create、update、approve、reject、cancel、manage、export、checkout、return 等操作词汇 |
-| control_objects | id 主键；code 唯一；kind | page、menu、business 三种对象种类，分别代表页面、导航入口和业务资源 |
-| permissions | PRIMARY KEY(operation_id,object_id)；两字段均为外键 | 一条记录就是一项有效许可，不生成“所有对象 × 所有操作”的无意义笛卡尔积 |
-| role_permissions | PRIMARY KEY(role_id,operation_id,object_id)；role_id 外键；(operation_id,object_id) 复合外键引用 permissions | 将已有许可授予角色；禁止重复授权，禁止授予不存在的组合 |
-
-这里的主键是“操作与对象组合本身就能识别一项许可”的业务键。关联表与被关联实体强依赖，不需要另造编号。若使用代理许可编号，还需要唯一约束才能消除重复组合；本项目直接用联合主键表达该不变量，并让角色许可表保持同一语义。技术会话、设备、预约、借还和事件审计属于额外技术表或业务表，不算进七张 RBAC 核心表。
-
-一个用户可以同时是学生和教师。设用户 u 的角色集合为 R(u)，角色 r 的许可集合为 P(r)，则：
-
-`EffectivePermissions(u) = ∪ { P(r) | r ∈ R(u) }`
-
-`Allow(u, o, a) ⇔ (a, o) ∈ EffectivePermissions(u)`
-
-未授予的组合默认拒绝。系统管理员也通过数据库里显式授予的许可获得能力，不设置“只要角色名是 admin 就跳过全部鉴权”的分支。多角色账号 `multi` 用于验证并集语义；教师权限并不免除“不能审批自己的预约”这一业务限制。
-
-### 3.2 角色分工与业务权限矩阵
-
-演示账号为 student、teacher、keeper、admin、auditor、multi，演示密码按 API 契约初始化。密码不进入事件载荷、审计详情或报告截图。下表是种子数据的预期业务授权矩阵，最终种子授权应由 `/api/rbac` 和数据库实际读取核对。✓ 表示授予此“对象：操作”，— 表示不授予。
+若 R(u) 是用户已分配角色集合，P(r) 是角色许可集合，则 E(u)=⋃r∈R(u)P(r)。对对象 o 和操作 a，只有(a,o)属于 E(u) 才通过 RBAC 检查。每次受控变更在 BEGIN IMMEDIATE 之后重查许可，使授权更改与业务提交按写事务顺序执行。管理员拥有显式授予的许可，不按角色名绕过鉴权。
 
 | 业务许可 | 学生 | 教师 | 设备管理员 | 审计员 | 系统管理员 | 学生兼教师 |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -73,79 +60,91 @@
 | rbac:manage | — | — | — | — | ✓ | — |
 | audit:view | — | — | — | ✓ | ✓ | — |
 
-权限矩阵界面从 `control_objects`、`operations`、`permissions`、`role_permissions` 读取行、列和勾选状态。只有 `permissions` 中存在的配对可编辑；不支持的格子应标为空或禁用。授权保存以一个事务替换指定角色的许可集合，避免出现半旧半新的矩阵。管理员的 rbac:view、rbac:manage、page.rbac:view、menu.rbac:view 受到防失联保护，并保证至少保留一个管理员账号；此保护是管理入口的业务规则，不是全能鉴权旁路。
+以上是种子授权；管理员保存矩阵后以数据库实际记录为准。实验室、分类和维护事件在当前粒度下共同使用 equipment:update，并没有各自独立的许可对象。不同 source_id 可以共享一个许可对，但每个 source_id 的绑定唯一且固定。
 
-## 4. 页面、菜单与按钮的控制异同
+权限矩阵只允许编辑 permissions 中存在的格子。保存前验证所有许可，随后在同一事务替换目标角色集合。用户角色分配同样整体校验并替换。admin 的 rbac:view、rbac:manage、page.rbac:view、menu.rbac:view 受到防失联保护，并至少保留一个有效管理员账号；这些规则保护管理入口，不是全能旁路。
 
-| 控制层次 | 对象示例 | 许可示例 | 用户可见行为 | 服务端责任 |
-| --- | --- | --- | --- | --- |
-| 页面 | page.reservations | page.reservations:view | 决定是否可以进入预约页面；直接切换页面也要检查 | 列表接口同时检查页面查看与业务查看许可 |
-| 菜单 | menu.reservations | menu.reservations:view | 决定侧栏是否出现预约导航入口 | 隐藏入口不能替代接口授权；拥有页面许可时仍可通过合法方式进入 |
-| 功能按钮 | reservation 业务对象 | reservation:approve | 在同一个预约页面内显示审批按钮或提交表单 | 每次事件派发检查 reservation:approve，拒绝伪造请求 |
+登录会话保存随机令牌的 SHA-256 摘要、用户、CSRF 和到期时间，默认有效期 12 小时。重新登录轮换会话，注销删除服务端会话。当前没有 session_roles、角色激活/停用接口或会话内角色子集，每次使用全部已分配角色。多角色并集、即时撤权、角色继承和 DSD 是不同机制。
 
-三者都采用对象与操作的 RBAC 判定，但控制对象粒度和使用时机不同。菜单控制可发现入口，页面控制可访问区域，按钮控制可执行动作；它们不是互相推出的同一个布尔开关。只有页面查看权限不能推导出审批权限。撤掉某个菜单权限不应自动把数据库中的业务许可一起删除。按钮还会受当前记录状态影响，例如有审批许可的人只在待审批记录上出现可执行审批动作。
+## 4. 页面、菜单与动作
 
-数据归属也是独立限制：普通申请人读取自己的预约和借还；有相应审批、借还管理或审计能力的账号按业务职责读取必要的全量记录。接口不能只按可见列表筛选，还应在执行取消等单条操作时重新核验对象归属。查询、导出均保持一致的数据范围。
-
-## 5. 监听器、事件消息与固定派发表
-
-### 5.1 从按钮事件到对象消息
-
-课堂笔记把事件源、监听器、Action 和软件对象与 RBAC 中的“操作—对象”联系起来。项目的对应关系是：页面控件作为事件源；JavaScript 的 `addEventListener` 作为监听器；监听器组织 `{source_id,payload}` 消息；服务端根据固定绑定解析受控业务对象与操作；授权后调用业务处理器，产生状态变化和审计记录。
-
-界面隐藏按钮只是友好的呈现策略。学生直接构造 `source_id=reservation.approve` 的 HTTP 消息时，仍应经过同一权限判定并得到 403；不能因为按钮不存在就省略服务端检查。服务端也不采信载荷中的 object、operation、handler 等字段。未知 source_id 返回 400，不动态执行客户端传来的函数名。
-
-### 5.2 固定事件表
-
-| 事件源 source_id | 事件监听的语义 | 固定对象 | 固定操作 | 授权后响应 |
-| --- | --- | --- | --- | --- |
-| equipment.save | 设备表单提交 | equipment | update | 新增或更新设备资料 |
-| reservation.submit | 预约表单提交 | reservation | create | 创建待审批预约 |
-| reservation.approve | 审批按钮触发 | reservation | approve | 将待审批预约批准 |
-| reservation.reject | 驳回按钮触发 | reservation | reject | 必填驳回理由并结束审批 |
-| reservation.cancel | 取消按钮触发 | reservation | cancel | 校验本人或 manage 权限并取消 |
-| loan.checkout | 借出按钮触发 | loan | checkout | 校验批准状态后登记实物借出 |
-| loan.return | 归还按钮触发 | loan | return | 校验借出状态后登记归还 |
-| rbac.save_permissions | 权限矩阵保存 | rbac | manage | 事务内替换角色许可集合 |
-| rbac.assign_roles | 用户角色保存 | rbac | manage | 事务内替换用户角色分配 |
-
-服务端 `/api/events` 返回固定绑定表和最近事件，可让演示者查看事件源、事件类型、对象、操作、处理器与执行结果之间的关联。具体 DOM 事件类型和 Python 处理器名称以运行时 registry 返回值为准；本表不把语义名称冒充已经核验的运行日志。
-
-### 5.3 时序与审计
-
-事件处理依次执行：接收消息 → 校验会话/CSRF → 解析固定绑定 → 按当前用户角色取许可并集 → 判断授权 → 进入业务服务 → 校验输入与状态 → 事务提交 → 返回结果并刷新界面。未登录为 401，缺少许可为 403，输入错误为 400，状态或资源冲突为 409。
-
-受控变更写入 `event_audit`，记录 actor、source_id、event_type、object_code、operation_code、target_id、outcome、detail、created_at。目标编号从经过类型核验的 id、reservation_id、role_id、user_id、equipment_id 等固定字段取得，成功响应有实际记录 id 时使用该 id；权限矩阵和角色分配事件分别保留角色/用户目标，避免只有“配置成功”而无法定位对象。允许、拒绝和输入不合法的受控变更都应留下可解释结果。业务变更失败时先回滚业务事务，再独立保留失败审计；不能为了写失败日志而提交半次业务更新。日志不记录密码、会话令牌或 CSRF 密钥。登录前/无效 CSRF 等入口拒绝是否具备可识别操作者，应按实际可取得的上下文如实记录，不伪造身份。
-
-## 6. RBAC 与预约业务解耦
-
-RBAC 只回答“这个用户是否被授予该对象上的该操作”。业务服务进一步回答“这条记录当前是否允许此操作”。有教师许可的人不能审批自己的申请；有设备管理员许可的人不能把已经借出的预约再次借出；有取消许可的人不能任意取消他人记录，除非另外拥有 reservation:manage。
-
-| 预约当前状态 | 事件 | 后继状态 | 业务前置条件 |
+| 层次 | 对象与许可示例 | 用途 | 服务端检查 |
 | --- | --- | --- | --- |
-| 不存在 | reservation.submit | pending 待审批 | 设备可预约；时间合法；无有效区间重叠 |
-| pending | reservation.approve | approved 已批准 | 审批者不是申请人；记录仍待审批 |
-| pending | reservation.reject | rejected 已驳回 | 审批者不是申请人；驳回理由非空 |
-| pending / approved | reservation.cancel | cancelled 已取消 | 申请人本人或具有 manage；尚未借出 |
-| approved | loan.checkout | borrowed 已借出 | 当前时刻严格早于预约结束；设备未维护；无另一笔未归还实物借用 |
-| borrowed | loan.return | returned 已归还 | 对应借还记录处于 borrowed；归还检查说明合法 |
+| 页面 | page.reservations:view | 是否进入共享预约区域 | 预约列表同时要求页面许可和 reservation:view |
+| 菜单 | menu.reservations:view | 是否展示导航入口 | 不以隐藏菜单替代接口授权 |
+| 动作 | reservation:approve | 是否呈现审批动作 | 事件每次校验业务许可，随后验证具体记录 |
 
-`rejected`、`cancelled`、`returned` 在本次业务链中是终态，不提供重新打开。借还表与预约表在借出、归还时同事务更新，保证二者状态一致。重复审批、重复借出、重复归还应返回冲突，不能悄悄创建新记录。设备状态为 available 或 maintenance；maintenance 是设备维护状态，不与预约状态混为一列。演示允许在预约开始前办理借出，但从预约结束时刻起（now ≥ end_at）即拒绝借出；这项简化须在结果分析中明确说明。
+三类许可独立保存。只有页面查看许可不能推导出审批权；隐藏菜单不会自动删除业务许可。按钮还受记录状态与归属影响。普通申请人只读取本人预约和借还；拥有审批、借还管理、reservation:manage 或审计能力的用户可按职责读取全量记录。查询与导出复用相同范围函数。
 
-## 7. 数据库事务、隔离与并发规则
+角色授权是动作的必要条件，业务条件继续收窄访问：即使拥有批准许可，也不能审批自己的预约；即使拥有取消许可，也不能取消他人记录，除非另有 reservation:manage；即使拥有借出许可，也不能对同一预约重复借出。
 
-每条数据库连接都启用 SQLite 外键。所有会竞争同一设备、预约、借还或角色集合的变更都在 `BEGIN IMMEDIATE` 写事务内重新读取状态、检查条件并提交。SQLite 在同一数据库文件上串行化写入；这适合本地课程原型，并非分布式库存锁。
+## 5. 15 项固定事件
 
-预约采用半开时间区间 `[start_at,end_at)`。同设备已有状态为 pending、approved 或 borrowed 的记录，只要满足 `existing.start_at < requested.end_at AND existing.end_at > requested.start_at`，就与新请求冲突。于是 10:00—11:00 和 11:00—12:00 可以首尾衔接，10:30—11:30 则不可重叠。创建时在事务内执行查重，避免两个请求都在检查之后同时写入。拒绝和取消的记录释放预约区间；已归还记录不再占用将来预约。
+前端按钮 click 只打开确认或检查表单，最终由表单 submit 监听器把动作组织为 {source_id,payload}，服务端按下表解析后执行。15 项固定绑定的 event_type 均为 submit。payload 中的 object、operation、handler、user_id 或状态字段不能替代固定绑定及当前身份。注册表本身不是可由客户端写入的业务配置。
 
-区间不重叠并不意味着实物可以同时借出：借出时还必须查询该设备是否有未归还借还记录。即便两笔预约时段不重叠，只要前一台实物还没归还，后一笔也不能借出。预约 approved→borrowed 和 loan 的插入必须原子完成；借还归还与预约 returned 同样原子完成。
+| source_id | event_type | 对象:操作 | handler | 主要写入表 |
+| --- | --- | --- | --- | --- |
+| equipment.save | submit | equipment:update | save_equipment | equipment；兼容维护输入时也可写 equipment_maintenance |
+| laboratory.save | submit | equipment:update | save_laboratory | laboratories |
+| laboratory.set_active | submit | equipment:update | set_laboratory_active | laboratories |
+| category.save | submit | equipment:update | save_category | equipment_categories |
+| category.set_active | submit | equipment:update | set_category_active | equipment_categories |
+| maintenance.start | submit | equipment:update | start_maintenance | equipment_maintenance |
+| maintenance.end | submit | equipment:update | end_maintenance | equipment_maintenance |
+| reservation.submit | submit | reservation:create | submit_reservation | reservations |
+| reservation.approve | submit | reservation:approve | approve_reservation | reservation_reviews、reservations |
+| reservation.reject | submit | reservation:reject | reject_reservation | reservation_reviews、reservations |
+| reservation.cancel | submit | reservation:cancel | cancel_reservation | reservations |
+| loan.checkout | submit | loan:checkout | checkout_loan | loans |
+| loan.return | submit | loan:return | return_loan | loans；damaged 时关联 equipment_maintenance |
+| rbac.save_permissions | submit | rbac:manage | save_role_permissions | role_permissions |
+| rbac.assign_roles | submit | rbac:manage | assign_roles | user_roles |
 
-权限矩阵和用户角色更新必须整体校验再替换。未知、空集合、重复角色或不支持的许可组合不应部分生效。查询逻辑、CSV 导出逻辑与页面使用相同数据范围。CSV 使用 UTF-8 BOM，并对可能触发电子表格公式的单元格转义。
+每次成功受控变更还写 event_audit。流程为身份与 CSRF → 固定绑定 → BEGIN IMMEDIATE → 当前许可 → 处理器业务校验/写入 → 成功审计 → COMMIT。领域错误回滚后单独保留 denied 或 invalid 审计；成功审计写入失败时也不提交业务修改。未登录 401、缺许可/自审/归属 403、输入错误 400、记录不存在 404、业务冲突 409；未知内部错误返回不含堆栈的 JSON 500。
 
-日期按 Asia/Shanghai 本地时间、ISO 格式、分钟精度处理。拒绝无效时间、过去时间和结束不晚于开始的区间。自动化测试注入时间或动态生成未来时间，避免固定日期过期造成无意义失败。随机会话令牌在数据库中保存散列，变更请求携带 CSRF；界面显示用户内容时使用文本转义方式，不把输入直接拼入 innerHTML。
+审计目标随事件语义确定：设备/实验室/分类保存对应各自记录；维护事件对应维护记录；预约事件对应预约；借还事件对应借还；授权变更对应角色或用户。object_code 是抽象授权对象，不代表 target_id 总是某一张表的同一类型主键。失败时仅能使用已取得且类型合法的目标编号，不伪造操作者或历史。
 
-## 8. 可复核材料与客观边界
+## 6. 存储状态、展示状态与维护
 
-三张配套设计图分别为 `rbac_er.png`、`event_sequence.png`、`lifecycle.png`，位于上级 `报告与验证` 文件夹。它们由 `diagram_sources.py` 生成，是设计图，不是运行截图。验收项及所需真实证据列于 `acceptance.md`，执行结果须在测试完成后单独填写。
+### 6.1 预约审批与借还分离
 
-本项目用于本机课程演示，未声称完成生产部署、负载测试、全浏览器兼容性、独立安全审计或线上服务保障。SQLite 写事务保证本地单文件事务规则，但没有提供多实例跨数据库协调。未实现角色继承、显式 deny 优先级、会话内激活角色、跨机构租户隔离、审批会签与设备损坏赔偿流程。默认管理员保护只防止演示系统管理入口失联，不构成外部身份治理体系。账号和种子设备仅为演示数据，截图和统计须标明来自实际运行。
+reservations.status 只存 pending、approved、rejected、cancelled。pending 可批准或驳回，pending/approved 在未生成借还记录时可取消。批准/驳回必须由他人处理，reservation_reviews.reservation_id 唯一；当前不支持同一申请多轮决定或会签。
+
+loans 不存重复的状态列。不存在借还记录时，预约列表显示原流程状态；存在且 returned_at 为空时显示 borrowed；returned_at 非空时显示 returned。API 同时返回 workflow_status，保留预约表的原状态。借出和归还不会把 reservations.status 改成 borrowed/returned，也不会删除原批准记录。
+
+| 事件 | 存储变化 | 展示结果与约束 |
+| --- | --- | --- |
+| 提交 | 插入 pending 预约 | 合法未来半开区间，无占用冲突，设备有效可用 |
+| 批准/驳回 | 插入审批记录，更新预约为 approved/rejected | 不能自审；驳回理由必填；批准重新检查设备、过期与冲突 |
+| 取消 | 更新为 cancelled，写 cancelled_at/cancelled_by | 本人或 manage；尚无任何借还记录 |
+| 借出 | 插入 loans，记录 checkout_by/at/condition | 原预约仍 approved；列表投影 borrowed；必须 now < end_at；允许提前借出 |
+| 正常归还 | 写 returned_by/at、return_condition、passed | 列表投影 returned，借出检查仍保留 |
+| 异常归还 | 写 damaged 并自动建立关联开放维护 | 列表投影 returned；设备的维护状态由维护记录产生 |
+
+### 6.2 设备可用性与生命周期
+
+设备表只存 lifecycle_status：active、disabled、retired。retired 不可恢复为 active/disabled，替换实物应建立新的独立资产编号。停用或报废有有效预约/未归还设备时拒绝。
+
+查询状态按优先级推导：生命周期非 active 时返回其值；分类或实验室停用时返回 disabled；有 end_at 为空的维护记录时返回 maintenance；否则为 available。available 表示未受这些可用性条件限制，不意味着当前一定没有未归还借用；预约时段与实物借出占用仍分别检查。
+
+手动 maintenance.start 只对 available 且没有有效预约或未归还借用的设备开放，原因必填；部分唯一索引阻止同一实物同时存在两条开放维护。maintenance.end 要求维护未结束且结果非空，只填结束人/时间/结果，不顺带启用已停用的实验室、分类或已报废设备。
+
+归还验收 damaged 时自动创建关联维护，安全处置优先，不因其他未来预约而跳过维护。这些未来申请仍保留历史，但维护结束前不能批准或借出。它与手动维护的冲突检查是不同业务路径，不能把两者概括成同一前置条件。
+
+## 7. 事务、冲突与迁移
+
+每个连接启用外键和 10 秒 busy_timeout。竞争写入在 BEGIN IMMEDIATE 之后校验，防止两个请求同时通过检查再写入。预约区间为 [start_at,end_at)，冲突条件是 existing.start < requested.end 且 existing.end > requested.start。pending/approved 占用中，已关联归还完成的记录被排除；拒绝和取消不占用。相邻区间可以衔接，实物未归还仍会阻止另一预约借出。
+
+数据库以唯一约束保护一申请一审批、一申请一借还、一异常借还最多一关联维护，以部分唯一索引保护一设备一开放维护。应用继续校验决定、归属和时间，不能把数据库字段约束当成完整业务许可。
+
+版本 2 启动检测旧设备表缺少 lifecycle_status 时执行非破坏迁移：先用 SQLite backup API 保存旧库快照，再在事务内重建旧设备、预约、借还相关结构，保留原主键、授权、会话和审计；外键核验成功后提交。旧分类与位置转成主数据关联。原来没有的审批时间、经办人保持 NULL；旧已归还说明迁入归还检查，不捏造借出检查；旧维护标记的时间明确为迁移登记时间。失败则回滚，保留备份，不要求用户先清空数据。
+
+日期采用 Asia/Shanghai 本地 ISO 时间，预约输入精确到分钟，拒绝时区后缀、非零秒、非法日期、过去时间及结束不晚于开始。CSV 使用 UTF-8 BOM 和公式起始字符转义。页面用户内容经 h() 转义或 textContent 输出；专项验证范围与一般代码审查分开记录。
+
+## 8. 模型定位与验证边界
+
+当前实现是平面用户多角色许可并集，叠加业务记录和管理完整性约束。没有角色层次表、继承闭包、自选会话激活集合、正式互斥角色集合或阈值，因此不宣称实现角色继承、SSD/DSD 或 RBAC3。禁止自审比较操作者与某一预约申请人，允许同一人同时拥有学生与教师身份；它不是禁止角色并存。
+
+RBAC0/1/2/3 的结构分类见 [Sandhu等原论文](https://csrc.nist.gov/CSRC/media/Projects/Role-Based-Access-Control/documents/sandhu96.pdf)；会话激活与 SSD/DSD 组件见 [NIST统一模型论文](https://csrc.nist.gov/pubs/journal/2001/08/proposed-nist-standard-for-rolebased-access-contro/final)；记录关系约束可以叠加在角色条件之后，见 [NIST FAQ](https://csrc.nist.gov/Projects/Role-Based-Access-Control/faqs)。这些概念用于解释实现，不构成标准符合性认证。
+
+验证使用隔离数据库及真实浏览器流程；字段/关系图是设计图，界面截图来自运行记录，两者不互相替代。自动化、浏览器、代码审查和未专项验证的范围见 acceptance.md。当前系统是本机单数据库应用，未声称完成多实例协调、生产安全审计、压力认证或外部身份系统集成。

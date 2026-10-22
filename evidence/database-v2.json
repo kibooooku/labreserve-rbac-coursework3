@@ -1,0 +1,1290 @@
+{
+  "database": "C:\\Users\\yq\\Desktop\\系统分析设计作业\\作业3\\labreserve\\instance\\labreserve.sqlite3",
+  "user_version": 2,
+  "table_count": 16,
+  "foreign_key_check": [],
+  "schema": {
+    "control_objects": {
+      "count": 17,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "kind",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_control_objects_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "equipment": {
+      "count": 8,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "model",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "category_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "laboratory_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "location",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 7,
+          "name": "lifecycle_status",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "'active'",
+          "pk": 0
+        },
+        {
+          "cid": 8,
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        },
+        {
+          "cid": 9,
+          "name": "created_by",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 10,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 11,
+          "name": "updated_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "created_by",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "laboratories",
+          "from": "laboratory_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 2,
+          "seq": 0,
+          "table": "equipment_categories",
+          "from": "category_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_equipment_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "equipment_categories": {
+      "count": 5,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "active",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "1",
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_equipment_categories_2",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        },
+        {
+          "seq": 1,
+          "name": "sqlite_autoindex_equipment_categories_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "equipment_maintenance": {
+      "count": 1,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "equipment_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "loan_id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "started_by",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "start_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "reason",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "ended_by",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 7,
+          "name": "end_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 8,
+          "name": "result",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "ended_by",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "users",
+          "from": "started_by",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 2,
+          "seq": 0,
+          "table": "loans",
+          "from": "loan_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 3,
+          "seq": 0,
+          "table": "equipment",
+          "from": "equipment_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "idx_maintenance_equipment_time",
+          "unique": 0,
+          "origin": "c",
+          "partial": 0
+        },
+        {
+          "seq": 1,
+          "name": "idx_one_open_maintenance",
+          "unique": 1,
+          "origin": "c",
+          "partial": 1
+        },
+        {
+          "seq": 2,
+          "name": "sqlite_autoindex_equipment_maintenance_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "event_audit": {
+      "count": 1,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "actor_id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "actor_name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "source_id",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "event_type",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "object_code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "operation_code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 7,
+          "name": "target_id",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 8,
+          "name": "outcome",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 9,
+          "name": "detail",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 10,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "actor_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": []
+    },
+    "laboratories": {
+      "count": 7,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "location",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "manager_id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "active",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "1",
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "description",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "manager_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_laboratories_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "loans": {
+      "count": 2,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "reservation_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "checkout_by",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "checkout_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "checkout_condition",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "returned_by",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "returned_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 7,
+          "name": "return_condition",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 8,
+          "name": "acceptance_result",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "returned_by",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "users",
+          "from": "checkout_by",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 2,
+          "seq": 0,
+          "table": "reservations",
+          "from": "reservation_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_loans_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "operations": {
+      "count": 10,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_operations_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "permissions": {
+      "count": 27,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "operation_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "object_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 2
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "control_objects",
+          "from": "object_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "operations",
+          "from": "operation_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_permissions_1",
+          "unique": 1,
+          "origin": "pk",
+          "partial": 0
+        }
+      ]
+    },
+    "reservation_reviews": {
+      "count": 4,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "reservation_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "reviewer_id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "decision",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "note",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": "''",
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "reviewed_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "reviewer_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "reservations",
+          "from": "reservation_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_reservation_reviews_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "reservations": {
+      "count": 7,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "equipment_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "user_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "start_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "end_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 5,
+          "name": "purpose",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 6,
+          "name": "status",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 7,
+          "name": "created_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 8,
+          "name": "cancelled_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 9,
+          "name": "cancelled_by",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 10,
+          "name": "updated_at",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "cancelled_by",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "users",
+          "from": "user_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 2,
+          "seq": 0,
+          "table": "equipment",
+          "from": "equipment_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "idx_reservation_overlap",
+          "unique": 0,
+          "origin": "c",
+          "partial": 0
+        }
+      ]
+    },
+    "role_permissions": {
+      "count": 89,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "role_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "operation_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 2
+        },
+        {
+          "cid": 2,
+          "name": "object_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 3
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "permissions",
+          "from": "operation_id",
+          "to": "operation_id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 0,
+          "seq": 1,
+          "table": "permissions",
+          "from": "object_id",
+          "to": "object_id",
+          "on_update": "NO ACTION",
+          "on_delete": "NO ACTION",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "roles",
+          "from": "role_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_role_permissions_1",
+          "unique": 1,
+          "origin": "pk",
+          "partial": 0
+        }
+      ]
+    },
+    "roles": {
+      "count": 5,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "code",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_roles_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    },
+    "sessions": {
+      "count": 2,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "token_hash",
+          "type": "TEXT",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "user_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "csrf_token",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "expires_at",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "users",
+          "from": "user_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_sessions_1",
+          "unique": 1,
+          "origin": "pk",
+          "partial": 0
+        }
+      ]
+    },
+    "user_roles": {
+      "count": 7,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "user_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "role_id",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 2
+        }
+      ],
+      "foreign_keys": [
+        {
+          "id": 0,
+          "seq": 0,
+          "table": "roles",
+          "from": "role_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        },
+        {
+          "id": 1,
+          "seq": 0,
+          "table": "users",
+          "from": "user_id",
+          "to": "id",
+          "on_update": "NO ACTION",
+          "on_delete": "CASCADE",
+          "match": "NONE"
+        }
+      ],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_user_roles_1",
+          "unique": 1,
+          "origin": "pk",
+          "partial": 0
+        }
+      ]
+    },
+    "users": {
+      "count": 6,
+      "columns": [
+        {
+          "cid": 0,
+          "name": "id",
+          "type": "INTEGER",
+          "notnull": 0,
+          "dflt_value": null,
+          "pk": 1
+        },
+        {
+          "cid": 1,
+          "name": "username",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 2,
+          "name": "display_name",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 3,
+          "name": "password_hash",
+          "type": "TEXT",
+          "notnull": 1,
+          "dflt_value": null,
+          "pk": 0
+        },
+        {
+          "cid": 4,
+          "name": "active",
+          "type": "INTEGER",
+          "notnull": 1,
+          "dflt_value": "1",
+          "pk": 0
+        }
+      ],
+      "foreign_keys": [],
+      "indexes": [
+        {
+          "seq": 0,
+          "name": "sqlite_autoindex_users_1",
+          "unique": 1,
+          "origin": "u",
+          "partial": 0
+        }
+      ]
+    }
+  }
+}

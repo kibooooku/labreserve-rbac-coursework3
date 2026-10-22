@@ -74,7 +74,19 @@ def dashboard():
 @bp.get("/api/equipment")
 def equipment():
     rbac.require_permissions("page.equipment:view", "equipment:view")
-    return success([dict(r) for r in get_db().execute("SELECT * FROM equipment ORDER BY code")])
+    return success([dict(r) for r in get_db().execute(business.EQUIPMENT_SELECT + " ORDER BY e.code")])
+
+
+@bp.get("/api/equipment/metadata")
+def equipment_metadata():
+    rbac.require_permissions("page.equipment:view", "equipment:view")
+    return success(business.equipment_metadata())
+
+
+@bp.get("/api/maintenance")
+def maintenance():
+    rbac.require_permissions("page.equipment:view", "equipment:view")
+    return success(business.maintenance_rows())
 
 
 @bp.get("/api/reservations")

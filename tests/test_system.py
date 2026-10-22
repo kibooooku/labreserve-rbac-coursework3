@@ -28,7 +28,7 @@ def test_seed_login_password_hash_and_session_cookie(app, client):
 
 def test_seed_loan_timestamps_follow_reservation_history(app):
     with app.app_context():
-        rows = get_db().execute("SELECT r.created_at,r.start_at,r.end_at,l.checkout_at,l.returned_at,l.status FROM loans l JOIN reservations r ON r.id=l.reservation_id").fetchall()
+        rows = get_db().execute("SELECT r.created_at,r.start_at,r.end_at,l.checkout_at,l.returned_at,CASE WHEN l.returned_at IS NULL THEN 'borrowed' ELSE 'returned' END AS status FROM loans l JOIN reservations r ON r.id=l.reservation_id").fetchall()
         assert {row["status"] for row in rows} == {"borrowed", "returned"}
         clock = datetime.fromisoformat(app.config["NOW"])
         for row in rows:
@@ -59,6 +59,7 @@ def test_seven_rbac_tables_and_composite_foreign_keys(app):
         db = get_db()
         names = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         assert {"users", "roles", "user_roles", "operations", "control_objects", "permissions", "role_permissions"}.issubset(names)
+        assert len(names) == 16
         permissions_pk = {r[1] for r in db.execute("PRAGMA table_info(permissions)") if r[5]}
         assert permissions_pk == {"operation_id", "object_id"}
         assert db.execute("PRAGMA foreign_keys").fetchone()[0] == 1
@@ -245,7 +246,7 @@ def test_admin_lockout_guards_and_dynamic_role_assignment(app, client):
 def test_auditor_can_read_registry_but_cannot_mutate(client):
     auth = login(client, "auditor")
     registry = client.get("/api/events").json["data"]
-    assert len(registry["bindings"]) == 9
+    assert len(registry["bindings"]) == 15
     assert {b["source_id"] for b in registry["bindings"]} >= {"reservation.submit", "loan.return", "rbac.save_permissions"}
     assert event(client, auth["csrf_token"], "reservation.submit", future_payload()).status_code == 403
 
@@ -264,7 +265,7 @@ def test_csv_bom_formula_escape_and_export_authorization(app):
 
 def test_equipment_validation_and_maintenance_guard(client):
     k = login(client, "keeper")
-    payload = {"code": "EQ-009", "name": "实验电源", "category": "电子测量", "location": "B205", "status": "available", "description": "课程新增设备"}
+    payload = {"code": "EQ-099", "name": "实验电源", "category": "电子测量", "location": "B205", "status": "available", "description": "课程新增设备"}
     created = event(client, k["csrf_token"], "equipment.save", payload)
     assert created.status_code == 200
     assert event(client, k["csrf_token"], "equipment.save", payload).status_code == 409

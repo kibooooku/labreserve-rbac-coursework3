@@ -2,7 +2,7 @@
 
 /* Presentation only: each fixed event source is resolved and authorized again by
    the server. The UI never sends an object/operation or trusts hidden buttons. */
-const S = { user: null, permissions: new Set(), csrf: "", page: "dashboard", data: {}, filters: {}, roleId: null, rbacTab: "matrix", auditTab: "audit", requestId: 0 };
+const S = { user: null, permissions: new Set(), csrf: "", page: "dashboard", data: {}, filters: {}, roleId: null, rbacTab: "matrix", auditTab: "audit", metadataOpen: false, requestId: 0 };
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const h = value => String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character]));
@@ -15,10 +15,10 @@ const pages = {
   rbac: { name: "角色与权限", icon: "◇", kicker: "ACCESS CONTROL", description: "以操作 × 控制对象配置细粒度权限，支持多角色合并。" },
   audit: { name: "审计与事件", icon: "≋", kicker: "AUDIT & EVENTS", description: "追踪固定事件源、授权判定与业务操作的完整路径。" }
 };
-const statusNames = { available: "可预约", maintenance: "维护中", pending: "待审批", approved: "已批准", rejected: "已拒绝", cancelled: "已取消", borrowed: "借用中", returned: "已归还", accepted: "已执行", success: "已执行", denied: "已拒绝", invalid: "校验失败" };
+const statusNames = { available: "可预约", maintenance: "维护中", disabled: "已停用", retired: "已报废", pending: "待审批", approved: "已批准", rejected: "已拒绝", cancelled: "已取消", borrowed: "借用中", returned: "已归还", accepted: "已执行", success: "已执行", denied: "已拒绝", invalid: "校验失败" };
 const operationNames = { view: "查看", create: "申请", update: "维护", approve: "批准", reject: "拒绝", cancel: "取消", manage: "管理", export: "导出", checkout: "领用", return: "归还" };
 const deviceIcons = ["⌕", "◈", "▥", "⊞", "⌁", "◉"];
-const eventTitles = { "equipment.save": "保存设备", "reservation.submit": "预约实验设备", "reservation.approve": "批准预约", "reservation.reject": "拒绝预约", "reservation.cancel": "取消预约", "loan.checkout": "办理设备领用", "loan.return": "办理设备归还", "rbac.save_permissions": "保存角色权限", "rbac.assign_roles": "分配用户角色" };
+const eventTitles = { "equipment.save": "保存设备", "laboratory.save": "保存实验室", "laboratory.set_active": "变更实验室状态", "category.save": "保存设备分类", "category.set_active": "变更分类状态", "maintenance.start": "登记设备维护", "maintenance.end": "完成设备维护", "reservation.submit": "预约实验设备", "reservation.approve": "批准预约", "reservation.reject": "拒绝预约", "reservation.cancel": "取消预约", "loan.checkout": "办理设备领用", "loan.return": "办理设备归还", "rbac.save_permissions": "保存角色权限", "rbac.assign_roles": "分配用户角色" };
 const supportedEvents = new Set(Object.keys(eventTitles));
 let dialogReturnFocus = null;
 
@@ -114,6 +114,9 @@ async function go(page, changeHash = true) {
     } else if (page === "loans") {
       const result = await Promise.all([api("/api/loans"), can("reservation:view") && can("page.reservations:view") ? api("/api/reservations") : Promise.resolve([])]);
       data = { loans: result[0], reservations: result[1] };
+    } else if (page === "equipment") {
+      const result = await Promise.all([api("/api/equipment"), api("/api/equipment/metadata"), api("/api/maintenance")]);
+      data = { equipment: result[0], metadata: result[1], maintenance: result[2] };
     } else if (page === "audit") {
       const result = await Promise.all([api("/api/audit"), api("/api/events")]);
       data = { audit: result[0], events: result[1] };
@@ -159,18 +162,38 @@ function filterToolbar(placeholder, statuses, page) {
 function filterRows(rows, page, text) {
   const f = S.filters[page] || {};
   const search = String(f.search || "").toLocaleLowerCase().trim();
-  return rows.filter(row => (!f.status || row.status === f.status) && (!search || text(row).toLocaleLowerCase().includes(search)));
+  return rows.filter(row => (!f.status || row.status === f.status) && (!search || text(row).toLocaleLowerCase().includes(search)) && (page !== "equipment" || ((!f.category || Number(row.category_id) === Number(f.category)) && (!f.laboratory || Number(row.laboratory_id) === Number(f.laboratory)))));
 }
 
 function renderEquipment() {
-  return heading(`${can("equipment:update") ? '<button class="button" data-action="open-equipment">＋ 登记设备</button>' : ""}${can("reservation:create") ? '<button class="button primary" data-action="open-reservation">＋ 新建预约</button>' : ""}`) + `<section class="panel filters-panel">${filterToolbar("搜索设备名称、编号或位置", ["available", "maintenance"], "equipment")}</section><div id="filter-results">${equipmentResults()}</div>` + permissionStrip();
+  const metadata = S.data.metadata;
+  const f = S.filters.equipment || {};
+  const extraFilters = `<div class="asset-filters"><label>设备分类<select data-filter="category" data-page="equipment" aria-label="按设备分类筛选"><option value="">全部分类</option>${metadata.categories.map(row => `<option value="${Number(row.id)}" ${Number(f.category) === Number(row.id) ? "selected" : ""}>${h(row.name)}</option>`).join("")}</select></label><label>所属实验室<select data-filter="laboratory" data-page="equipment" aria-label="按实验室筛选"><option value="">全部实验室</option>${metadata.laboratories.map(row => `<option value="${Number(row.id)}" ${Number(f.laboratory) === Number(row.id) ? "selected" : ""}>${h(row.name)}</option>`).join("")}</select></label><span class="field-hint">设备档案关联分类与实验室；一条记录对应一件实物资产。</span></div>`;
+  return heading(`${can("equipment:update") ? '<button class="button" data-action="open-equipment">＋ 登记设备</button>' : ""}${can("reservation:create") ? '<button class="button primary" data-action="open-reservation">＋ 新建预约</button>' : ""}`) + metadataPanel() + `<section class="panel filters-panel">${filterToolbar("搜索设备名称、资产编号或型号", ["available", "maintenance", "disabled", "retired"], "equipment")}${extraFilters}</section><div id="filter-results">${equipmentResults()}</div>` + maintenancePanel() + permissionStrip();
 }
 
 function equipmentResults() {
-  const rows = filterRows(S.data.equipment, "equipment", row => `${row.name} ${row.code} ${row.location} ${row.category}`);
+  const rows = filterRows(S.data.equipment, "equipment", row => `${row.name} ${row.code} ${row.location} ${row.category_name} ${row.laboratory_name} ${row.model}`);
   queueMicrotask(() => { if ($("#result-count")) $("#result-count").textContent = `共 ${rows.length} 台设备`; });
   if (!rows.length) return `<div class="panel">${empty("没有找到设备", "尝试调整搜索条件，或由设备管理员登记实验设备。")}</div>`;
-  return `<div class="equipment-grid">${rows.map((row, index) => `<article class="equipment-card"><div class="equipment-card-head"><span class="device-icon" aria-hidden="true">${deviceIcons[index % deviceIcons.length]}</span>${statusTag(row.status)}</div><h2>${h(row.name)}</h2><div class="equipment-code">${h(row.code)}</div><p class="equipment-description">${h(row.description || "实验室登记设备，可查看状态后提交预约。")}</p><div class="equipment-meta"><span>▣ ${h(row.category)}</span><span>⌖ ${h(row.location)}</span></div><div class="equipment-card-bottom">${can("reservation:create") ? `<button class="button primary small" data-action="open-reservation" data-equipment-id="${Number(row.id)}" ${row.status !== "available" ? "disabled title=维护中的设备无法预约" : ""}>${row.status === "available" ? "预约设备 ↗" : "设备维护中"}</button>` : '<span class="muted" style="font-size:10px">仅查看设备信息</span>'}${can("equipment:update") ? `<button class="button small" data-action="open-equipment" data-id="${Number(row.id)}">维护</button>` : ""}</div></article>`).join("")}</div>`;
+  return `<div class="equipment-grid">${rows.map((row, index) => `<article class="equipment-card" data-equipment-card="${Number(row.id)}"><div class="equipment-card-head"><span class="device-icon" aria-hidden="true">${deviceIcons[index % deviceIcons.length]}</span>${statusTag(row.status)}</div><h2>${h(row.name)}</h2><div class="equipment-code">资产编号 ${h(row.code)}</div><dl class="asset-specs"><div><dt>型号</dt><dd>${h(row.model || "未填写")}</dd></div><div><dt>分类</dt><dd>${h(row.category_name || row.category)}</dd></div><div><dt>实验室</dt><dd>${h(row.laboratory_name)}</dd></div><div><dt>存放位置</dt><dd>${h(row.location)}</dd></div><div><dt>服役状态</dt><dd>${h({ active: "在役", disabled: "停用", retired: "报废" }[row.lifecycle_status] || row.lifecycle_status)}</dd></div></dl><p class="equipment-description">${h(row.description || "实验室登记设备，可查看状态后提交预约。")}</p><div class="equipment-card-bottom">${can("reservation:create") ? `<button class="button primary small" data-action="open-reservation" data-equipment-id="${Number(row.id)}" ${row.status !== "available" ? `disabled title="${h(statusNames[row.status])}的设备不可预约"` : ""}>${row.status === "available" ? "预约设备 ↗" : h(statusNames[row.status])}</button>` : '<span class="muted" style="font-size:10px">仅查看设备档案</span>'}${can("equipment:update") ? `<button class="button small" data-action="open-equipment" data-id="${Number(row.id)}">编辑档案</button>` : ""}</div>${can("equipment:update") ? `<div class="asset-maintenance-action">${row.maintenance_id ? eventButton("maintenance.end", "完成本次维护", row.maintenance_id) : row.lifecycle_status === "active" ? eventButton("maintenance.start", "登记维护", row.id) : '<span class="field-hint">停用 / 报废设备不办理新维护</span>'}<span>维护操作单独留痕</span></div>` : ""}</article>`).join("")}</div>`;
+}
+
+function activeTag(active) { return `<span class="status ${active ? "available" : "disabled"}">${active ? "启用" : "停用"}</span>`; }
+function acceptanceLabel(result) { return result === "passed" ? "✓ 验收通过" : result === "damaged" ? "△ 验收异常 / 损坏" : "旧记录未记录"; }
+
+function metadataPanel() {
+  const metadata = S.data.metadata;
+  const editable = can("equipment:update");
+  const categoryRows = metadata.categories.map(row => `<tr><td><strong>${h(row.name)}</strong><small>${h(row.code)}</small></td><td>${h(row.description || "—")}</td><td>${activeTag(row.active)}</td>${editable ? `<td><div class="table-actions">${eventButton("category.save", "编辑", row.id)}${eventButton("category.set_active", row.active ? "停用" : "启用", row.id)}</div></td>` : ""}</tr>`).join("");
+  const laboratoryRows = metadata.laboratories.map(row => `<tr><td><strong>${h(row.name)}</strong><small>${h(row.code)} · ${h(row.location)}</small></td><td>${h(row.manager_name || "未指定")}</td><td>${activeTag(row.active)}</td>${editable ? `<td><div class="table-actions">${eventButton("laboratory.save", "编辑", row.id)}${eventButton("laboratory.set_active", row.active ? "停用" : "启用", row.id)}</div></td>` : ""}</tr>`).join("");
+  return `<details id="metadata-panel" class="panel metadata-panel" ${S.metadataOpen ? "open" : ""}><summary><span><b>分类与实验室</b><small>${metadata.categories.length} 个分类 · ${metadata.laboratories.length} 个实验室 · ${editable ? "可管理" : "只读"}</small></span><span class="details-hint">展开档案目录 <i>⌄</i></span></summary><div class="metadata-columns"><section id="category-directory"><div class="panel-head"><h2>设备分类</h2>${editable ? eventButton("category.save", "＋ 新建分类", 0) : ""}</div>${categoryRows ? table(["分类", "说明", "状态", ...(editable ? ["操作"] : [])], categoryRows) : empty("尚未创建分类", "设备登记前请先创建分类。")}</section><section id="laboratory-directory"><div class="panel-head"><h2>实验室目录</h2>${editable ? eventButton("laboratory.save", "＋ 新建实验室", 0) : ""}</div>${laboratoryRows ? table(["实验室 / 位置", "负责人", "状态", ...(editable ? ["操作"] : [])], laboratoryRows) : empty("尚未创建实验室", "设备登记前请先创建所属实验室。")}</section></div><div class="panel-footer">◇ 停用保留历史关联，阻止新预约；存在未完成预约或未归还设备时不能停用。</div></details>`;
+}
+
+function maintenancePanel() {
+  const rows = S.data.maintenance || [];
+  const body = rows.map(row => `<tr data-maintenance-row="${Number(row.id)}"><td><strong>${h(row.equipment_name)}</strong><small>${h(row.equipment_code)} · 维护 #${Number(row.id)}</small></td><td><span class="status ${row.status === "open" ? "maintenance" : "returned"}">${row.status === "open" ? "进行中" : "已完成"}</span></td><td class="record-note">${h(row.reason)}</td><td>${h(row.started_by_name)}<small>${dateTime(row.start_at)}</small></td><td class="record-note">${h(row.result || "待完成维护")}</td><td>${h(row.ended_by_name || "—")}<small>${dateTime(row.end_at)}</small></td>${can("equipment:update") ? `<td>${row.status === "open" ? eventButton("maintenance.end", "完成维护", row.id, "primary") : '<span class="muted">—</span>'}</td>` : ""}</tr>`).join("");
+  return `<section id="maintenance-panel" class="panel maintenance-panel"><div class="panel-head"><div><h2>维护记录 <small>MAINTENANCE HISTORY</small></h2><p>开始与完成操作分别记录经办人、时间和结果，维护中的设备不可预约。</p></div><span class="result-count">${rows.filter(row => row.status === "open").length} 项进行中 · ${rows.length} 条记录</span></div>${rows.length ? table(["设备", "维护状态", "维护原因", "登记人 / 开始", "处理结果", "完成人 / 结束", ...(can("equipment:update") ? ["操作"] : [])], body) : empty("暂无维护记录", "设备管理员可从设备卡片登记维护，完成后恢复设备可预约状态。")}</section>`;
 }
 
 function renderReservations() {
@@ -196,7 +219,7 @@ function reservationResults() {
   const rows = filterRows(S.data.reservations, "reservations", row => `${row.equipment_name} ${row.equipment_code} ${row.applicant_name} ${row.purpose}`);
   queueMicrotask(() => { if ($("#result-count")) $("#result-count").textContent = `共 ${rows.length} 条预约`; });
   if (!rows.length) return empty("暂无预约记录", "提交设备预约后，可以在这里查看进度与审批结果。");
-  return table(["设备 / 预约编号", "申请人", "实验时间", "实验用途", "状态", "审批信息", "操作"], rows.map(row => `<tr><td><strong>${h(row.equipment_name)}</strong><small>${h(row.equipment_code)} · #${Number(row.id)}</small></td><td>${h(row.applicant_name)}${isOwn(row) ? '<small>本人申请</small>' : ""}</td><td>${interval(row)}</td><td style="min-width:130px;max-width:220px;word-break:break-word">${h(row.purpose)}</td><td>${statusTag(row.status)}</td><td>${h(row.reviewer_name || "—")}<small>${h(row.review_note || "")}</small></td><td><div class="table-actions">${reservationActions(row)}</div></td></tr>`).join(""));
+  return table(["设备 / 预约编号", "申请人", "实验时间", "实验用途", "状态", "审批信息", "操作"], rows.map(row => `<tr data-reservation-row="${Number(row.id)}"><td><strong>${h(row.equipment_name)}</strong><small>${h(row.equipment_code)} · #${Number(row.id)}</small></td><td>${h(row.applicant_name)}${isOwn(row) ? '<small>本人申请</small>' : ""}</td><td>${interval(row)}</td><td style="min-width:130px;max-width:220px;word-break:break-word">${h(row.purpose)}</td><td>${statusTag(row.status)}</td><td>${h(row.reviewer_name || "—")}<small>${h(row.review_note || "")}</small></td><td><div class="table-actions">${reservationActions(row)}</div></td></tr>`).join(""));
 }
 
 function renderLoans() {
@@ -208,7 +231,7 @@ function loanResults() {
   const rows = filterRows(S.data.loans, "loans", row => `${row.equipment_name} ${row.applicant_name}`);
   queueMicrotask(() => { if ($("#result-count")) $("#result-count").textContent = `共 ${rows.length} 条记录`; });
   if (!rows.length) return empty("暂无借用记录", "已领用的实验设备将在这里记录借用与归还情况。");
-  return table(["借用设备", "借用人", "领用时间", "归还时间", "状态", "检查备注", "操作"], rows.map(row => `<tr><td><strong>${h(row.equipment_name)}</strong><small>借用 #${Number(row.id)} · 预约 #${Number(row.reservation_id)}</small></td><td>${h(row.applicant_name)}</td><td>${dateTime(row.checkout_at)}</td><td>${dateTime(row.returned_at)}</td><td>${statusTag(row.status)}</td><td style="max-width:230px;word-break:break-word">${h(row.condition_note || "—")}</td><td>${row.status === "borrowed" && can("loan:return") ? eventButton("loan.return", "办理归还", row.id, "primary") : '<span class="muted">—</span>'}</td></tr>`).join(""));
+  return table(["借用设备 / 借用人", "借出记录", "归还记录", "状态 / 验收", "操作"], rows.map(row => `<tr data-loan-row="${Number(row.id)}"><td><strong>${h(row.equipment_name)}</strong><small>借用 #${Number(row.id)} · 预约 #${Number(row.reservation_id)}</small><small>借用人：${h(row.applicant_name)}</small></td><td class="loan-record"><strong>${dateTime(row.checkout_at)}</strong><small>经办人：${h(row.checkout_by_name || "—")}</small><p>${h(row.checkout_condition || "未填写借出检查说明")}</p></td><td class="loan-record">${row.returned_at ? `<strong>${dateTime(row.returned_at)}</strong><small>经办人：${h(row.returned_by_name || "—")}</small><p>${h(row.return_condition || "—")}</p>` : '<span class="muted">尚未归还</span>'}</td><td>${statusTag(row.status)}${row.acceptance_result ? `<small class="acceptance ${row.acceptance_result === "passed" ? "passed" : row.acceptance_result === "damaged" ? "damaged" : "unknown"}">${acceptanceLabel(row.acceptance_result)}</small>` : ""}</td><td>${row.status === "borrowed" && can("loan:return") ? eventButton("loan.return", "办理归还", row.id, "primary") : '<span class="muted">—</span>'}</td></tr>`).join(""), "loans-table");
 }
 
 function renderRbac() {
@@ -246,11 +269,23 @@ function renderAudit() {
   const tabs = `<div class="tabs" role="tablist" aria-label="审计视图"><button class="tab ${S.auditTab === "audit" ? "active" : ""}" data-action="audit-tab" data-tab="audit" role="tab" aria-selected="${S.auditTab === "audit"}">操作审计记录</button><button class="tab ${S.auditTab === "events" ? "active" : ""}" data-action="audit-tab" data-tab="events" role="tab" aria-selected="${S.auditTab === "events"}">事件监听与绑定</button></div>`;
   const bindingRows = (events.bindings || []).map(binding => `<tr><td><strong class="event-code">${h(binding.source_id)}</strong></td><td>${h(binding.event_type)}</td><td><span class="event-code">${h(binding.object_code)}:${h(binding.operation_code)}</span></td><td class="event-code">${h(binding.handler)}</td></tr>`).join("");
   const bindings = `<section class="panel bindings-panel"><div class="panel-head"><h2>固定事件注册表 <small>EVENT REGISTRY</small></h2><span class="result-count">${(events.bindings || []).length} 个绑定</span></div>${table(["事件源 source_id", "事件类型", "控制对象 × 操作", "业务处理器"], bindingRows)}<div class="panel-footer"><div class="binding-flow"><code>DOM 事件</code>→<code>EventListener</code>→<code>dispatch(source_id)</code>→<code>RBAC 校验</code>→<code>业务处理器</code>→<code>审计</code></div></div></section>`;
-  return heading('<button class="button" data-action="refresh">↻ 刷新记录</button>') + notice("<strong>事件源与控制对象的对应关系在服务端固定注册。</strong> 接口忽略调用方自称的权限；授权拒绝及输入错误同样写入审计记录，审计不记录密码与会话秘密。") + tabs + (S.auditTab === "events" ? bindings + auditTable(events.recent || [], "最近事件响应") : auditTable(S.data.audit, "操作审计记录")) + permissionStrip();
+  return heading('<button class="button" data-action="refresh">↻ 刷新记录</button>') + notice("<strong>事件源与控制对象的对应关系在服务端固定注册。</strong> 接口忽略调用方自称的权限；授权拒绝及输入错误同样写入审计记录，审计不记录密码与会话秘密。") + tabs + (S.auditTab === "events" ? bindings + auditTable((events.recent || []).slice(0, 8), "最近事件响应 · 8 条预览") : `<section class="panel"><div class="panel-head"><h2>操作审计记录 <small>LAST 200 EVENTS</small></h2></div>${filterToolbar("搜索事件源、操作人或详情", ["accepted", "denied", "invalid"], "audit")}<div id="filter-results">${auditResults()}</div></section>`) + permissionStrip();
 }
 
 function auditTable(rows, title) {
-  return `<section class="panel"><div class="panel-head"><h2>${title} <small>LAST 200 EVENTS</small></h2><span class="result-count">${rows.length} 条</span></div>${rows.length ? table(["发生时间 / 操作人", "固定事件源", "授权目标", "对象记录", "结果", "详情"], rows.map(row => `<tr><td>${dateTime(row.created_at)}<small>${h(row.actor_name || "匿名")}</small></td><td><strong class="event-code">${h(row.source_id)}</strong><small>${h(row.event_type)}</small></td><td class="event-code">${h(row.object_code)}:${h(row.operation_code)}</td><td>${row.target_id === null || row.target_id === undefined ? "—" : h(row.target_id)}</td><td>${statusTag(row.outcome)}</td><td class="audit-detail">${h(typeof row.detail === "object" ? JSON.stringify(row.detail) : row.detail)}</td></tr>`).join("")) : empty("暂无审计记录", "提交预约、审批、借还或权限变更后可在此查看事件执行情况。")}</section>`;
+  return `<section class="panel"><div class="panel-head"><h2>${title}</h2><span class="result-count">${rows.length} 条</span></div>${auditRows(rows)}</section>`;
+}
+
+function auditRows(rows) {
+  return rows.length ? table(["发生时间 / 操作人", "固定事件源", "授权目标", "对象记录", "结果", "详情"], rows.map(row => `<tr><td>${dateTime(row.created_at)}<small>${h(row.actor_name || "匿名")}</small></td><td><strong class="event-code">${h(row.source_id)}</strong><small>${h(row.event_type)}</small></td><td class="event-code">${h(row.object_code)}:${h(row.operation_code)}</td><td>${row.target_id === null || row.target_id === undefined ? "—" : h(row.target_id)}</td><td>${statusTag(row.outcome)}</td><td class="audit-detail">${h(typeof row.detail === "object" ? JSON.stringify(row.detail) : row.detail)}</td></tr>`).join("")) : empty("暂无匹配审计记录", "调整筛选条件，或执行预约、维护、借还及权限操作后查看记录。");
+}
+
+function auditResults() {
+  const f = S.filters.audit || {};
+  const search = String(f.search || "").trim().toLocaleLowerCase();
+  const rows = S.data.audit.filter(row => (!f.status || row.outcome === f.status) && (!search || `${row.actor_name} ${row.source_id} ${row.detail} ${row.object_code}:${row.operation_code}`.toLocaleLowerCase().includes(search)));
+  queueMicrotask(() => { if ($("#result-count")) $("#result-count").textContent = `共 ${rows.length} 条记录`; });
+  return auditRows(rows);
 }
 
 function openDialog(title, subtitle, content, source, submitText, options = {}) {
@@ -274,7 +309,7 @@ async function openReservation(equipmentId) {
     if (!available.length) return toast("当前没有可预约设备，请联系设备管理员。", true);
     const start = new Date(Date.now() + 24 * 60 * 60 * 1000); start.setMinutes(0, 0, 0);
     const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
-    const content = `<div class="form-grid">${field("reserve-equipment", "选择实验设备", `<select id="reserve-equipment" name="equipment_id" required>${available.map(row => `<option value="${Number(row.id)}" ${Number(row.id) === Number(equipmentId) ? "selected" : ""}>${h(row.name)} · ${h(row.code)} · ${h(row.location)}</option>`).join("")}</select>`, true)}${field("reserve-start", "实验开始时间", `<input id="reserve-start" name="start_at" type="datetime-local" required value="${localDateTime(start)}" min="${localDateTime(new Date())}">`)}${field("reserve-end", "实验结束时间", `<input id="reserve-end" name="end_at" type="datetime-local" required value="${localDateTime(end)}" min="${localDateTime(new Date())}">`)}${field("reserve-purpose", "实验用途", '<textarea id="reserve-purpose" name="purpose" required maxlength="500" placeholder="请填写实验内容、课程或项目名称（2—500 字）"></textarea>', true, "预约按实际设备区分；时间区间前闭后开，结束时刻可衔接下一份预约。")}</div>` + notice("提交后进入待审批状态；同一设备的有效预约不可时间重叠。本人申请不可由本人审批。");
+    const content = `<div class="form-grid">${field("reserve-equipment", "选择实验设备", `<select id="reserve-equipment" name="equipment_id" required>${available.map(row => `<option value="${Number(row.id)}" ${Number(row.id) === Number(equipmentId) ? "selected" : ""}>${h(row.name)} · ${h(row.code)} · ${h(row.laboratory_name || row.location)}</option>`).join("")}</select>`, true)}${field("reserve-start", "实验开始时间", `<input id="reserve-start" name="start_at" type="datetime-local" required value="${localDateTime(start)}" min="${localDateTime(new Date())}">`)}${field("reserve-end", "实验结束时间", `<input id="reserve-end" name="end_at" type="datetime-local" required value="${localDateTime(end)}" min="${localDateTime(new Date())}">`)}${field("reserve-purpose", "实验用途", '<textarea id="reserve-purpose" name="purpose" required maxlength="500" placeholder="请填写实验内容、课程或项目名称（2—500 字）"></textarea>', true, "预约按实际设备区分；时间区间前闭后开，结束时刻可衔接下一份预约。")}</div>` + notice("提交后进入待审批状态；同一设备的有效预约不可时间重叠。本人申请不可由本人审批。");
     openDialog("预约实验设备", "填写实验安排，由指导教师审批后办理领用。", content, "reservation.submit", "提交预约");
   } catch (error) { toast(error.message, true); }
 }
@@ -282,17 +317,49 @@ async function openReservation(equipmentId) {
 function openEquipment(id) {
   if (!can("equipment:update")) return toast("当前身份没有设备维护权限。", true);
   const row = S.data.equipment?.find(item => Number(item.id) === Number(id)) || {};
-  const content = hidden("id", row.id || "") + `<div class="form-grid">${field("device-code", "设备编号", `<input id="device-code" name="code" value="${h(row.code || "")}" required maxlength="40" placeholder="如 LAB-007">`)}${field("device-name", "设备名称", `<input id="device-name" name="name" value="${h(row.name || "")}" required maxlength="100" placeholder="如 数字示波器">`)}${field("device-category", "设备分类", `<input id="device-category" name="category" value="${h(row.category || "")}" required maxlength="60" placeholder="如 电子测量">`)}${field("device-location", "存放位置", `<input id="device-location" name="location" value="${h(row.location || "")}" required maxlength="100" placeholder="如 实验楼 A302">`)}${field("device-status", "设备状态", `<select id="device-status" name="status"><option value="available" ${row.status !== "maintenance" ? "selected" : ""}>可预约</option><option value="maintenance" ${row.status === "maintenance" ? "selected" : ""}>维护中</option></select>`, true, "维护中的设备暂停新预约；存在有效预约或未归还借用时不能切换为维护中。")}${field("device-description", "设备说明", `<textarea id="device-description" name="description" maxlength="1000" placeholder="规格、适用实验及使用注意事项">${h(row.description || "")}</textarea>`, true)}</div>`;
-  openDialog(row.id ? "维护实验设备" : "登记实验设备", "每条设备记录对应一台实物，以便独立检查预约冲突。", content, "equipment.save", "保存设备");
+  const metadata = S.data.metadata;
+  if (!metadata?.categories.length || !metadata?.laboratories.length) return toast("请先在分类与实验室目录中创建分类和实验室。", true);
+  const options = (rows, current) => rows.map(item => `<option value="${Number(item.id)}" ${Number(item.id) === Number(current) ? "selected" : ""} ${!item.active && Number(item.id) !== Number(current) ? "disabled" : ""}>${h(item.name)}${!item.active ? "（已停用）" : ""}</option>`).join("");
+  const content = hidden("id", row.id || "") + `<div class="form-grid">${field("device-code", "资产编号", `<input id="device-code" name="code" value="${h(row.code || "")}" required maxlength="40" placeholder="每台实物唯一，如 LAB-009">`)}${field("device-name", "设备名称", `<input id="device-name" name="name" value="${h(row.name || "")}" required maxlength="100" placeholder="如 数字示波器">`)}${field("device-model", "设备型号", `<input id="device-model" name="model" value="${h(row.model || "")}" maxlength="120" placeholder="如 DS1102Z-E">`, true)}${field("device-category", "关联设备分类", `<select id="device-category" name="category_id" required>${options(metadata.categories, row.category_id)}</select>`)}${field("device-laboratory", "所属实验室", `<select id="device-laboratory" name="laboratory_id" required>${options(metadata.laboratories, row.laboratory_id)}</select>`)}${field("device-location", "存放位置", `<input id="device-location" name="location" value="${h(row.location || "")}" required maxlength="100" placeholder="如 A302 第三设备柜">`)}${field("device-lifecycle", "服役状态", `<select id="device-lifecycle" name="lifecycle_status"><option value="active" ${!row.lifecycle_status || row.lifecycle_status === "active" ? "selected" : ""}>在役</option><option value="disabled" ${row.lifecycle_status === "disabled" ? "selected" : ""}>停用</option><option value="retired" ${row.lifecycle_status === "retired" ? "selected" : ""}>报废</option></select>`)}${field("device-description", "设备说明", `<textarea id="device-description" name="description" maxlength="1000" placeholder="规格、适用实验及使用注意事项">${h(row.description || "")}</textarea>`, true)}</div>` + notice("档案关联独立分类与实验室。有效预约或未归还借用会阻止停用、报废及维护；维护须通过单独的登记与完成操作留痕。");
+  openDialog(row.id ? "编辑设备档案" : "登记实验设备", "一件实物、一份档案；资产编号唯一，服役状态与维护记录分别管理。", content, "equipment.save", "保存设备档案");
+}
+
+function openMetadata(source, id) {
+  if (!can("equipment:update")) return toast("当前身份没有设备目录管理权限。", true);
+  const laboratory = source.startsWith("laboratory.");
+  const kind = laboratory ? "实验室" : "分类";
+  const rows = S.data.metadata[laboratory ? "laboratories" : "categories"];
+  const row = rows.find(item => Number(item.id) === Number(id)) || {};
+  if (source.endsWith("set_active")) {
+    if (!row.id) return;
+    const action = row.active ? "停用" : "启用";
+    return openDialog(`${action}${kind}`, "状态变更保留既有设备和业务历史关联。", hidden("id", row.id) + hidden("active", String(!row.active)) + `<div class="reservation-summary"><b>${h(row.name)}</b> · ${h(row.code)}</div>` + notice(row.active ? "停用后，关联设备不再接受新预约；存在有效预约或未归还设备时，服务端会拒绝停用。" : "启用后，符合在役及维护条件的关联设备可重新预约。", Boolean(row.active)), source, `确认${action}`, { danger: Boolean(row.active) });
+  }
+  let content = hidden("id", row.id || "") + `<div class="form-grid">${field("metadata-code", `${kind}编号`, `<input id="metadata-code" name="code" required maxlength="40" value="${h(row.code || "")}" placeholder="${laboratory ? "如 LAB-A" : "如 CAT-OPT"}">`)}${field("metadata-name", `${kind}名称`, `<input id="metadata-name" name="name" required maxlength="100" value="${h(row.name || "")}">`)}${laboratory ? field("laboratory-location", "实验室位置", `<input id="laboratory-location" name="location" required maxlength="100" value="${h(row.location || "")}" placeholder="如 实验楼 A302">`, true) + field("laboratory-manager", "实验室负责人", `<select id="laboratory-manager" name="manager_id"><option value="">暂不指定</option>${(S.data.metadata.managers || []).map(user => `<option value="${Number(user.id)}" ${Number(row.manager_id) === Number(user.id) ? "selected" : ""}>${h(user.display_name)} · ${h(user.username)}</option>`).join("")}</select>`, true) : ""}${field("metadata-description", `${kind}说明`, `<textarea id="metadata-description" name="description" maxlength="1000" placeholder="填写${kind}用途与管理说明">${h(row.description || "")}</textarea>`, true)}</div>`;
+  openDialog(`${row.id ? "编辑" : "新建"}${kind}`, "设备通过外键关联目录，分类与实验室变更均检查 equipment:update 许可。", content, source, `保存${kind}`);
+}
+
+function openMaintenance(source, id) {
+  if (!can("equipment:update")) return toast("当前身份没有设备维护权限。", true);
+  if (source === "maintenance.start") {
+    const row = S.data.equipment.find(item => Number(item.id) === Number(id));
+    if (!row) return;
+    return openDialog("登记设备维护", "登记后生成独立维护记录，设备转为维护中，暂停新预约。", hidden("equipment_id", row.id) + `<div class="reservation-summary"><b>${h(row.name)}</b> · 资产编号 ${h(row.code)}<br>所属实验室：${h(row.laboratory_name)}</div>` + field("maintenance-reason", "维护原因与计划", '<textarea id="maintenance-reason" name="reason" required maxlength="1000" placeholder="如：定期光学校准与镜头清洁，预计当天完成。"></textarea>', false, "当前有有效预约或未归还借用时，无法开始维护。"), source, "确认登记维护");
+  }
+  const row = S.data.maintenance.find(item => Number(item.id) === Number(id));
+  if (!row) return;
+  openDialog("完成设备维护", "保存处理结果，关闭维护记录并重新计算设备可预约状态。", hidden("id", row.id) + `<div class="reservation-summary"><b>${h(row.equipment_name)}</b> · 维护 #${Number(row.id)}<br>登记人：${h(row.started_by_name)} · ${dateTime(row.start_at)}<br>维护原因：${h(row.reason)}</div>` + field("maintenance-result", "维护处理结果", '<textarea id="maintenance-result" name="result" required maxlength="1000" placeholder="如：完成校准与清洁，功能测试正常，可恢复使用。"></textarea>', false, "处理结果、完成人和结束时间独立保存，不覆盖最初维护原因。"), source, "确认完成维护");
 }
 
 function reservationSummary(row) { return `<div class="reservation-summary"><b>${h(row.equipment_name)}</b> · 预约 #${Number(row.id)}<br>申请人：${h(row.applicant_name)}<br>实验安排：${dateTime(row.start_at)} 至 ${dateTime(row.end_at)}<br>用途：${h(row.purpose)}</div>`; }
 
 function openEvent(source, id) {
   if (!supportedEvents.has(source)) return;
-  const operation = { "equipment.save": "equipment:update", "reservation.submit": "reservation:create", "reservation.approve": "reservation:approve", "reservation.reject": "reservation:reject", "reservation.cancel": "reservation:cancel", "loan.checkout": "loan:checkout", "loan.return": "loan:return", "rbac.assign_roles": "rbac:manage" }[source];
+  const operation = source.startsWith("category.") || source.startsWith("laboratory.") || source.startsWith("maintenance.") ? "equipment:update" : { "equipment.save": "equipment:update", "reservation.submit": "reservation:create", "reservation.approve": "reservation:approve", "reservation.reject": "reservation:reject", "reservation.cancel": "reservation:cancel", "loan.checkout": "loan:checkout", "loan.return": "loan:return", "rbac.assign_roles": "rbac:manage" }[source];
   if (operation && !can(operation)) return toast(`缺少业务权限 ${operation}。`, true);
   if (source === "equipment.save") return openEquipment(id);
+  if (source.startsWith("category.") || source.startsWith("laboratory.")) return openMetadata(source, id);
+  if (source.startsWith("maintenance.")) return openMaintenance(source, id);
   if (source === "reservation.submit") return openReservation(id);
   if (source === "rbac.assign_roles") {
     const user = S.data.rbac.users.find(item => Number(item.id) === Number(id));
@@ -303,7 +370,7 @@ function openEvent(source, id) {
   if (source === "loan.return") {
     const row = S.data.loans.find(item => Number(item.id) === Number(id));
     if (!row) return;
-    return openDialog("办理设备归还", "请核对设备实物并记录归还检查情况。", hidden("id", row.id) + `<div class="reservation-summary"><b>${h(row.equipment_name)}</b> · 借用 #${Number(row.id)}<br>借用人：${h(row.applicant_name)}<br>领用时间：${dateTime(row.checkout_at)}</div>` + field("return-condition", "归还检查记录", '<textarea id="return-condition" name="condition_note" required maxlength="1000" placeholder="如：设备、配件齐全，外观正常，功能检查通过。"></textarea>', false, "归还检查记录必填，将连同操作人写入借用记录。"), source, "确认归还");
+    return openDialog("办理设备归还", "借出检查、归还检查与验收结果分别记录，经办人由当前登录用户确定。", hidden("id", row.id) + `<div class="reservation-summary"><b>${h(row.equipment_name)}</b> · 借用 #${Number(row.id)}<br>借用人：${h(row.applicant_name)}<br>领用时间：${dateTime(row.checkout_at)}<br>借出经办人：${h(row.checkout_by_name || "—")}<br>借出检查：${h(row.checkout_condition || "未填写")}</div>` + field("return-acceptance", "归还验收结果", '<select id="return-acceptance" name="acceptance_result" required><option value="passed">验收通过 · 设备正常</option><option value="damaged">验收异常 · 发现损坏</option></select>') + field("return-condition", "归还检查与验收说明", '<textarea id="return-condition" name="return_condition" required maxlength="1000" placeholder="如：设备、配件齐全，外观正常，功能检查通过；异常时说明具体损坏情况。"></textarea>', false, "归还检查独立保存，保留借出记录；验收异常将自动登记维护，暂停后续预约。"), source, "确认归还并保存验收");
   }
   const row = S.data.reservations.find(item => Number(item.id) === Number(id));
   if (!row) return;
@@ -311,7 +378,7 @@ function openEvent(source, id) {
   if (source === "reservation.approve") content += field("review-note", "审批备注（可选）", '<textarea id="review-note" name="note" maxlength="500" placeholder="可填写使用指导或实验要求"></textarea>');
   if (source === "reservation.reject") content += field("reject-note", "拒绝原因", '<textarea id="reject-note" name="note" required maxlength="500" placeholder="请说明拒绝原因，便于申请人调整实验安排"></textarea>');
   if (source === "reservation.cancel") content += notice("确认取消此预约？取消后将释放对应设备的预约时段。", true);
-  if (source === "loan.checkout") content += field("checkout-condition", "领用检查记录（可选）", '<textarea id="checkout-condition" name="condition_note" maxlength="1000" placeholder="如：设备功能正常、配件齐全。"></textarea>', false, "只可领用已批准且未结束的预约；设备不能存在另一笔未归还借用。");
+  if (source === "loan.checkout") content += field("checkout-condition", "借出检查记录", '<textarea id="checkout-condition" name="checkout_condition" required maxlength="1000" placeholder="请记录设备外观、附件及功能检查情况，如：设备正常、配件齐全。"></textarea>', false, "借出检查与当前经办人独立留痕；仅可办理已批准且未结束、设备无未归还借用的预约。");
   const subtitles = { "reservation.approve": "核对实验用途与设备安排，批准后可办理领用。", "reservation.reject": "拒绝后记录审批人和原因，释放预约时段。", "reservation.cancel": "仅限本人预约或具备额外管理权限的用户。", "loan.checkout": "核对预约与实物后，登记设备领用。" };
   openDialog(eventTitles[source], subtitles[source], content, source, source === "reservation.cancel" ? "确认取消预约" : source === "loan.checkout" ? "确认领用" : "确认" + (source.endsWith("approve") ? "批准" : "拒绝"), { danger: source.endsWith("reject") || source.endsWith("cancel") });
 }
@@ -321,7 +388,8 @@ function formPayload(source, form) {
   if (source === "rbac.save_permissions") return { role_id: Number(S.roleId), permissions: values.getAll("permissions") };
   if (source === "rbac.assign_roles") return { user_id: Number(values.get("user_id")), role_ids: values.getAll("role_ids").map(Number) };
   const data = Object.fromEntries(values.entries());
-  ["id", "equipment_id", "reservation_id"].forEach(key => { if (data[key] !== undefined) { if (data[key] === "") delete data[key]; else data[key] = Number(data[key]); } });
+  ["id", "equipment_id", "reservation_id", "category_id", "laboratory_id", "manager_id"].forEach(key => { if (data[key] !== undefined) { if (data[key] === "") { if (key === "manager_id") data[key] = null; else delete data[key]; } else data[key] = Number(data[key]); } });
+  if (data.active !== undefined) data.active = data.active === "true";
   Object.keys(data).forEach(key => { if (typeof data[key] === "string") data[key] = data[key].trim(); });
   return data;
 }
@@ -414,14 +482,17 @@ document.addEventListener("input", event => {
   if (event.target.classList.contains("matrix-check")) { const count = $("#matrix-count"); if (count) count.textContent = $$('.matrix-check:checked').length; }
 });
 document.addEventListener("change", event => {
-  if (event.target.dataset.filter) updateFilter(event.target);
+  // Text filters already update on input. Re-rendering again on blur would
+  // remove the destination button between pointerdown and click.
+  if (event.target.dataset.filter && event.target.dataset.filter !== "search") updateFilter(event.target);
   if (event.target.id === "role-selector") { S.roleId = Number(event.target.value); renderPage(); }
 });
+document.addEventListener("toggle", event => { if (event.target.id === "metadata-panel") S.metadataOpen = event.target.open; }, true);
 
 function updateFilter(input) {
   const page = input.dataset.page;
   S.filters[page] = { ...(S.filters[page] || {}), [input.dataset.filter]: input.value };
-  const renderers = { equipment: equipmentResults, reservations: reservationResults, loans: loanResults };
+  const renderers = { equipment: equipmentResults, reservations: reservationResults, loans: loanResults, audit: auditResults };
   if ($("#filter-results") && renderers[page]) $("#filter-results").innerHTML = renderers[page]();
 }
 

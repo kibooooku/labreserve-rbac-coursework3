@@ -252,8 +252,10 @@ def test_concurrent_nonoverlapping_checkouts_still_protect_one_physical_device(a
     first, second = approved(student, teacher, days=10), approved(student, teacher, days=11)
     responses = race([keeper, admin], "loan.checkout", [{"reservation_id": first["id"]}, {"reservation_id": second["id"]}])
     assert sorted(r.status_code for r in responses) == [200, 409]
-    assert len(rows(app, "SELECT l.id FROM loans l JOIN reservations r ON r.id=l.reservation_id WHERE r.equipment_id=1 AND l.status='borrowed'")) == 1
-    assert len(rows(app, "SELECT id FROM reservations WHERE id IN (?,?) AND status='borrowed'", (first["id"], second["id"]))) == 1
+    assert len(rows(app, "SELECT l.id FROM loans l JOIN reservations r ON r.id=l.reservation_id WHERE r.equipment_id=1 AND l.returned_at IS NULL")) == 1
+    assert len(rows(app, "SELECT id FROM reservations WHERE id IN (?,?) AND status='approved'", (first["id"], second["id"]))) == 2
+    displayed = student[0].get("/api/reservations").get_json()["data"]
+    assert sum(r["status"] == "borrowed" for r in displayed if r["id"] in (first["id"], second["id"])) == 1
 
 
 def test_concurrent_returns_are_not_double_applied(app):
@@ -264,8 +266,11 @@ def test_concurrent_returns_are_not_double_applied(app):
     lid = checkout.get_json()["data"]["id"]
     responses = race([keeper, admin], "loan.return", [{"id": lid, "condition_note": "并发归还甲"}, {"id": lid, "condition_note": "并发归还乙"}])
     assert sorted(r.status_code for r in responses) == [200, 409]
-    assert rows(app, "SELECT status FROM loans WHERE id=?", (lid,))[0]["status"] == "returned"
-    assert rows(app, "SELECT status FROM reservations WHERE id=?", (record["id"],))[0]["status"] == "returned"
+    returned = rows(app, "SELECT returned_at,return_condition,checkout_condition,returned_by FROM loans WHERE id=?", (lid,))[0]
+    assert returned["returned_at"] and returned["returned_by"] in (keeper[1]["user"]["id"], admin[1]["user"]["id"])
+    assert returned["return_condition"] in ("并发归还甲", "并发归还乙")
+    assert rows(app, "SELECT status FROM reservations WHERE id=?", (record["id"],))[0]["status"] == "approved"
+    assert next(r for r in student[0].get("/api/reservations").get_json()["data"] if r["id"] == record["id"])["status"] == "returned"
 
 
 def test_maintenance_blocks_submission_and_preserves_existing_reservations(app):
@@ -277,14 +282,16 @@ def test_maintenance_blocks_submission_and_preserves_existing_reservations(app):
     equipment = keeper[0].get("/api/equipment").get_json()["data"][0]
     equipment["status"] = "maintenance"
     assert event(keeper, "equipment.save", equipment).status_code == 409
-    assert rows(app, "SELECT status FROM equipment WHERE id=1")[0]["status"] == "available"
+    assert rows(app, "SELECT lifecycle_status FROM equipment WHERE id=1")[0]["lifecycle_status"] == "active"
+    assert not rows(app, "SELECT id FROM equipment_maintenance WHERE equipment_id=1 AND end_at IS NULL")
+    assert keeper[0].get("/api/equipment").get_json()["data"][0]["status"] == "available"
 
 
 def test_checkout_defensively_checks_maintenance_after_approval(app):
     student, teacher, keeper = (login(app, name) for name in ("student", "teacher", "keeper"))
     record = approved(student, teacher)
     # Direct setup simulates an external maintenance change; public UI forbids it while reserved.
-    execute(app, "UPDATE equipment SET status='maintenance' WHERE id=1")
+    execute(app, "INSERT INTO equipment_maintenance(equipment_id,started_by,start_at,reason) VALUES (1,3,?,'独立审查模拟外部维护')", (CLOCK.isoformat(timespec="seconds"),))
     assert event(keeper, "loan.checkout", {"reservation_id": record["id"]}).status_code == 409
     assert rows(app, "SELECT status FROM reservations WHERE id=?", (record["id"],))[0]["status"] == "approved"
 

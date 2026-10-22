@@ -1,98 +1,40 @@
-127.0.0.1 - - [22/Oct/2026 00:53:35] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:36] "GET /static/app.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:36] "GET /static/styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:36] "GET /api/me HTTP/1.1" 401 -
-127.0.0.1 - - [22/Oct/2026 00:53:38] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:38] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:38] "GET /api/dashboard HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:38] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:39] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:39] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:40] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:40] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:41] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:41] "GET /static/styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:41] "GET /static/app.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:41] "GET /api/me HTTP/1.1" 401 -
-127.0.0.1 - - [22/Oct/2026 00:53:42] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:42] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:42] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:42] "GET /api/dashboard HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:43] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:43] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:43] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:44] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:44] "GET /static/styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:44] "GET /static/app.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:44] "GET /api/me HTTP/1.1" 401 -
-127.0.0.1 - - [22/Oct/2026 00:53:46] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:46] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:46] "GET /api/dashboard HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:46] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "GET /api/loans HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "GET /api/loans HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:47] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:48] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:48] "GET /static/styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:48] "GET /static/app.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:48] "GET /api/me HTTP/1.1" 401 -
-127.0.0.1 - - [22/Oct/2026 00:53:49] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:49] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:49] "GET /api/dashboard HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:49] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:50] "GET /api/rbac HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:51] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:51] "GET /api/me HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:51] "GET /api/rbac HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:51] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:51] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:51] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "GET /api/me HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "POST /api/events HTTP/1.1" 403 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "GET /api/me HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "GET /api/rbac HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "GET /api/me HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:52] "GET /api/rbac HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:53] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:53] "GET /static/styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:53] "GET /static/app.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:53] "GET /api/me HTTP/1.1" 401 -
-127.0.0.1 - - [22/Oct/2026 00:53:54] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:54] "GET /api/dashboard HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:54] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:54] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:55] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:55] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:55] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:55] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:56] "GET /api/me HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:56] "POST /api/events HTTP/1.1" 403 -
-127.0.0.1 - - [22/Oct/2026 00:53:56] "GET / HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:56] "GET /static/styles.css HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:56] "GET /static/app.js HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:56] "GET /api/me HTTP/1.1" 401 -
-127.0.0.1 - - [22/Oct/2026 00:53:58] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:58] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:58] "GET /api/dashboard HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:58] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:59] "GET /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:53:59] "GET /api/audit HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:00] "GET /api/rbac HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:00] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:00] "GET /api/export/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:01] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:01] "POST /api/events HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:01] "GET /api/reservations HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:01] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:02] "GET /api/equipment HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:02] "POST /api/logout HTTP/1.1" 200 -
-127.0.0.1 - - [22/Oct/2026 00:54:02] "GET /api/me HTTP/1.1" 401 -
-{"passed": true, "steps": 24, "failure": null}
+真实Edge浏览器验收结果摘要（实际步骤及源文件哈希见result.json）
+suite: integrated-assets-maintenance-rbac-v2
+started_at: 2026-10-22T01:35:07.006261+00:00
+finished_at: 2026-10-22T01:35:47.831139+00:00
+steps: 34; passed: true
+console_errors: 0; unexpected_http_errors: 0
+1. PASS keeper通过页面真实登录
+2. PASS 管理员通过真实目录表单新建设备分类
+3. PASS 实验室独立保存位置负责人和说明，供设备通过外键关联
+4. PASS 真实设备档案保存资产编号型号服役状态并关联分类与实验室
+5. PASS 开始维护创建独立记录，设备立即派生为maintenance状态
+6. PASS 预约下拉仅列available设备，维护中设备不能选择
+7. PASS 完成维护独立保存处理结果完成人结束时间，设备恢复available
+8. PASS 分类及实验室通过各自启停事件使关联设备可用状态同步重算
+9. PASS 档案服役状态可通过真实表单停用与恢复，与维护记录分别管理
+10. PASS student通过页面真实登录
+11. PASS 学生隐藏权限管理及审计菜单
+12. PASS 学生监听器提交预约并持久化为待审批
+13. PASS teacher通过页面真实登录
+14. PASS 教师在共享预约页面批准他人申请，独立审批记录与四态工作流对应
+15. PASS 设备管理员从已批准预约办理实物领用
+16. PASS 归还独立保存经办人检查与验收通过结果，保留借出检查且同步预约状态
+17. PASS admin通过页面真实登录
+18. PASS 管理员查看页面菜单业务三类对象权限矩阵
+19. PASS 管理员通过矩阵撤销教师批准许可
+20. PASS 教师旧会话直调审批接口被403拒绝，伪造对象操作无效
+21. PASS 管理员通过矩阵恢复教师许可
+22. PASS 管理员通过真实表单保存用户学生与教师双角色
+23. PASS multi通过页面真实登录
+24. PASS 多角色账号有批准许可，仍被业务规则禁止自审
+25. PASS auditor通过页面真实登录
+26. PASS 审计员共享设备维护与目录视图，不出现任何编辑维护预约操作
+27. PASS 审计员直调维护事件被equipment:update许可校验拒绝
+28. PASS 审计员查看15个固定事件绑定及允许拒绝记录，包含目录和维护事件
+29. PASS 审计员可读矩阵但无法修改授权
+30. PASS 管理员通过按钮下载带BOM的真实CSV
+31. PASS 学生通过确认对话框取消本人待审预约
+32. PASS 390像素窄屏导航和预约表单可操作且无整页水平溢出
+33. PASS 退出后会话失效，接口拒绝继续访问
+34. PASS 全部六个浏览器身份无JavaScript异常和非预期HTTP错误
